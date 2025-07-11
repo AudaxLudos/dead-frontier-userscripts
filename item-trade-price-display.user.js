@@ -199,7 +199,7 @@
     window.addEventListener("load", event => {
         setTimeout(() => {
             if (unsafeWindow.inventoryHolder) {
-                console.log("Audax Scripts: Registering item trade price display userscript");
+                console.log("Audax Scripts: starting item trade price display userscript");
                 loadItemsTradeData();
                 registerItemSlotListener();
                 registerInfoBoxObserver();
