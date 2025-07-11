@@ -74,7 +74,8 @@
             return;
         }
         if (itemId in itemsTradeData) {
-            if (Date.now() / 1000 - itemsTradeData[itemId]["timestamp"] < 3600) {
+            // Only make a new request if 30 seconds has passed
+            if (Date.now() < itemsTradeData[itemId]["timestamp"] + 30000) {
                 displayTradePrices(hoveredItem, appendTo);
                 return;
             }
@@ -97,7 +98,7 @@
             itemTrades = itemTrades.filter((value) => value["itemId"].split("_")[0] == itemId);
             itemTrades = itemTrades.slice(0, 5);
             itemsTradeData[itemId] = {};
-            itemsTradeData[itemId]["timestamp"] = Date.now() / 1000;
+            itemsTradeData[itemId]["timestamp"] = Date.now();
             itemsTradeData[itemId]["trades"] = itemTrades;
             itemRequestInProgress = itemRequestInProgress.filter(item => item !== itemId);
             localStorage.setItem("audax_itemsTradeData", JSON.stringify(itemsTradeData));
