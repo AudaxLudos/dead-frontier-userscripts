@@ -15,6 +15,7 @@
     let globalData = unsafeWindow.globalData;
     let userVars = unsafeWindow.userVars;
     let itemsTradeData = {};
+    let itemRequestInProgress = [];
     let hoveredItem;
 
     function loadItemsTradeData() {
@@ -68,11 +69,16 @@
         if (itemData && itemData["no_transfer"]) {
             return;
         }
+        if (itemRequestInProgress.includes(itemId)) {
+            return;
+        }
         if (itemId in itemsTradeData) {
             if (Date.now() / 1000 - itemsTradeData[itemId]["timestamp"] < 3600) {
                 displayTradePrices(hoveredItem, appendTo);
                 return;
             }
+        } else {
+            itemRequestInProgress.push(itemId);
         }
 
         let itemTrades;
@@ -92,6 +98,7 @@
             itemsTradeData[itemId] = {};
             itemsTradeData[itemId]["timestamp"] = Date.now() / 1000;
             itemsTradeData[itemId]["trades"] = itemTrades;
+            itemRequestInProgress = itemRequestInProgress.filter(item => item !== itemId);
             localStorage.setItem("audax_itemsTradeData", JSON.stringify(itemsTradeData));
             displayTradePrices(hoveredItem, appendTo);
         });
