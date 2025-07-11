@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.0
+// @version     1.0.1
 // @description Adds buttons for quickly depositing or withdrawing cash
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -58,7 +58,7 @@
         container.style.padding = "5px";
         container.style.border = "1px solid #990000";
         container.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
-        container.style.zIndex = "20";
+        container.style.marginBottom = "20px";
         for (let i in bankActions) {
             let action = bankActions[i].action;
             let amount = bankActions[i].amount
@@ -66,7 +66,6 @@
             button.setAttribute("data-action", action);
             button.setAttribute("data-amount", amount);
             button.innerHTML = bankActions[i].name;
-            // linkDiv.appendChild();
             container.appendChild(button);
 
             button.addEventListener("click", event => {
