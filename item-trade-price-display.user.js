@@ -15,38 +15,34 @@
     let globalData = unsafeWindow.globalData;
     let userVars = unsafeWindow.userVars;
     let itemsTradeData = {};
-    let lastHoveredItem;
+    let hoveredItem;
 
     function loadItemsTradeData() {
-        const data = localStorage.getItem("df_itemsTradeData") || JSON.stringify(itemsTradeData);
+        const data = localStorage.getItem("audax_itemsTradeData") || JSON.stringify(itemsTradeData);
 
         try {
             itemsTradeData = JSON.parse(data);
         } catch (error) {
             console.error("Failed to parse items trade data:", error);
-            localStorage.setItem("df_itemsTradeData", JSON.stringify(itemsTradeData));
+            localStorage.setItem("audax_itemsTradeData", JSON.stringify(itemsTradeData));
         }
     }
 
-    function marketItemPriceHelper() {
-        if (unsafeWindow.inventoryHolder == null) {
-            return;
-        }
-
+    function registerItemSlotListener() {
         const slots = document.getElementsByClassName('validSlot');
-        console.log(slots);
-        console.log(slots.length);
         for (let i = 0; i < slots.length; i++) {
             slots[i].addEventListener('mouseover', function (event) {
                 const itemId = event.target.dataset.type?.split("_")[0] || null;
                 if (!itemId) {
-                    lastHoveredItem = null;
+                    hoveredItem = null;
                     return;
                 }
-                lastHoveredItem = itemId;
+                hoveredItem = itemId;
             });
         }
+    }
 
+    function registerInfoBoxObserver() {
         let target = unsafeWindow.infoBox;
         let config = { childList: true, subtree: true };
 
@@ -56,8 +52,8 @@
                     let isVanillaMutation = Object.values(mutation.addedNodes).some(node => node.className === "itemName");
                     let scrapPriceDivIndex = Object.values(mutation.addedNodes).findIndex(node => node.className === "itemData" && node.textContent.includes("Scrap Price"));
                     let scrapPriceDiv = Object.values(mutation.addedNodes).at(scrapPriceDivIndex);
-                    if (isVanillaMutation && lastHoveredItem) {
-                        getItemTradeData(lastHoveredItem, scrapPriceDiv);
+                    if (isVanillaMutation && hoveredItem) {
+                        getItemTradeData(hoveredItem, scrapPriceDiv);
                         break;
                     }
                 }
@@ -74,7 +70,7 @@
         }
         if (itemId in itemsTradeData) {
             if (Date.now() / 1000 - itemsTradeData[itemId]["timestamp"] < 3600) {
-                displayTradePrices(lastHoveredItem, appendTo);
+                displayTradePrices(hoveredItem, appendTo);
                 return;
             }
         }
@@ -96,8 +92,8 @@
             itemsTradeData[itemId] = {};
             itemsTradeData[itemId]["timestamp"] = Date.now() / 1000;
             itemsTradeData[itemId]["trades"] = itemTrades;
-            localStorage.setItem("df_itemsTradeData", JSON.stringify(itemsTradeData));
-            displayTradePrices(lastHoveredItem, appendTo);
+            localStorage.setItem("audax_itemsTradeData", JSON.stringify(itemsTradeData));
+            displayTradePrices(hoveredItem, appendTo);
         });
     }
 
@@ -185,7 +181,10 @@
 
     // Inject script when page fully loads
     setTimeout(() => {
-        loadItemsTradeData();
-        marketItemPriceHelper();
+        if (unsafeWindow.inventoryHolder) {
+            loadItemsTradeData();
+            registerItemSlotListener();
+            registerInfoBoxObserver();
+        }
     }, 500);
 })();
