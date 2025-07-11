@@ -107,6 +107,9 @@
     }
 
     function displayTradePrices(itemId, appendTo) {
+        if (!itemsTradeData[itemId]) {
+            return;
+        }
         let tradeList = itemsTradeData[itemId]["trades"];
         let tradePrices = document.getElementById("audaxTradePrices")
         if (tradePrices) {
