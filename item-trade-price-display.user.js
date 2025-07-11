@@ -20,7 +20,7 @@
     let globalData = unsafeWindow.globalData;
     let userVars = unsafeWindow.userVars;
     let itemsTradeData = {};
-    let itemRequestInProgress = [];
+    let pendingItemRequests = [];
     let hoveredItem;
 
     function loadItemsTradeData() {
@@ -74,20 +74,17 @@
         if (itemData && itemData["no_transfer"]) {
             return;
         }
-        if (itemRequestInProgress.includes(itemId)) {
+        // Only make a new request if 30 seconds has passed
+        if (itemId in itemsTradeData && Date.now() < itemsTradeData[itemId]["timestamp"] + 30000) {
+            displayTradePrices(hoveredItem, appendTo);
             return;
         }
-        if (itemId in itemsTradeData) {
-            // Only make a new request if 30 seconds has passed
-            if (Date.now() < itemsTradeData[itemId]["timestamp"] + 30000) {
-                displayTradePrices(hoveredItem, appendTo);
-                return;
-            }
-        } else {
-            itemRequestInProgress.push(itemId);
+        if (pendingItemRequests.includes(itemId)) {
+            return;
         }
 
-        let itemTrades;
+        pendingItemRequests.push(itemId);
+
         let params = {};
         params["pagetime"] = userVars["pagetime"];
         params["tradezone"] = userVars["DFSTATS_df_tradezone"];
@@ -98,13 +95,13 @@
         params["category"] = "";
         params["search"] = "trades";
         webCall("trade_search", params, function (data) {
-            itemTrades = filterItemTradeResponseText(data);
+            let itemTrades = filterItemTradeResponseText(data);
             itemTrades = itemTrades.filter((value) => value["itemId"].split("_")[0] == itemId);
             itemTrades = itemTrades.slice(0, 5);
             itemsTradeData[itemId] = {};
             itemsTradeData[itemId]["timestamp"] = Date.now();
             itemsTradeData[itemId]["trades"] = itemTrades;
-            itemRequestInProgress = itemRequestInProgress.filter(item => item !== itemId);
+            pendingItemRequests = pendingItemRequests.filter(item => item !== itemId);
             localStorage.setItem("audax_itemsTradeData", JSON.stringify(itemsTradeData));
             displayTradePrices(hoveredItem, appendTo);
         });
