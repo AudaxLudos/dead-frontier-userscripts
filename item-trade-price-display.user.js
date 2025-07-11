@@ -4,9 +4,13 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.3a
+// @version     1.0.4
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
+// @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
+// @supportURL  https://github.com/AudaxLudos/dead-frontier-userscripts/issues
+// @downloadURL https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/main/item-trade-price-display.user.js
+// @updateURL   https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/main/item-trade-price-display.user.js
 // @run-at      document-end
 // ==/UserScript==
 
@@ -195,6 +199,7 @@
     window.addEventListener("load", event => {
         setTimeout(() => {
             if (unsafeWindow.inventoryHolder) {
+                console.log("Audax Scripts: Registering item trade price display userscript");
                 loadItemsTradeData();
                 registerItemSlotListener();
                 registerInfoBoxObserver();
