@@ -1,0 +1,191 @@
+// ==UserScript==
+// @name        DF - Item Trade Price Display
+// @icon        https://www.google.com/s2/favicons?sz=64&domain=deadfrontier.com
+// @namespace   https://github.com/AudaxLudos/
+// @author      AudaxLudos
+// @license     MIT
+// @version     1.0.0
+// @description Adds trade prices to item tooltip on hover
+// @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
+// ==/UserScript==
+
+(function () {
+    "use strict";
+
+    let globalData = unsafeWindow.globalData;
+    let userVars = unsafeWindow.userVars;
+    let itemsTradeData = {};
+    let lastHoveredItem;
+
+    function loadItemsTradeData() {
+        const data = localStorage.getItem("df_itemsTradeData") || JSON.stringify(itemsTradeData);
+
+        try {
+            itemsTradeData = JSON.parse(data);
+        } catch (error) {
+            console.error("Failed to parse items trade data:", error);
+            localStorage.setItem("df_itemsTradeData", JSON.stringify(itemsTradeData));
+        }
+    }
+
+    function marketItemPriceHelper() {
+        if (unsafeWindow.inventoryHolder == null) {
+            return;
+        }
+
+        const slots = document.getElementsByClassName('validSlot');
+        console.log(slots);
+        console.log(slots.length);
+        for (let i = 0; i < slots.length; i++) {
+            slots[i].addEventListener('mouseover', function (event) {
+                const itemId = event.target.dataset.type?.split("_")[0] || null;
+                if (!itemId) {
+                    lastHoveredItem = null;
+                    return;
+                }
+                lastHoveredItem = itemId;
+            });
+        }
+
+        let target = unsafeWindow.infoBox;
+        let config = { childList: true, subtree: true };
+
+        let infoBoxObserver = new MutationObserver((mutationList) => {
+            for (let mutation of mutationList) {
+                if (mutation.type === 'childList') {
+                    let isVanillaMutation = Object.values(mutation.addedNodes).some(node => node.className === "itemName");
+                    let scrapPriceDivIndex = Object.values(mutation.addedNodes).findIndex(node => node.className === "itemData" && node.textContent.includes("Scrap Price"));
+                    let scrapPriceDiv = Object.values(mutation.addedNodes).at(scrapPriceDivIndex);
+                    if (isVanillaMutation && lastHoveredItem) {
+                        getItemTradeData(lastHoveredItem, scrapPriceDiv);
+                        break;
+                    }
+                }
+            }
+        });
+
+        infoBoxObserver.observe(target, config);
+    }
+
+    function getItemTradeData(itemId, appendTo) {
+        let itemData = globalData[itemId];
+        if (itemData && itemData["no_transfer"]) {
+            return;
+        }
+        if (itemId in itemsTradeData) {
+            if (Date.now() / 1000 - itemsTradeData[itemId]["timestamp"] < 3600) {
+                displayTradePrices(lastHoveredItem, appendTo);
+                return;
+            }
+        }
+
+        let itemTrades;
+        let params = {};
+        params["pagetime"] = userVars["pagetime"];
+        params["tradezone"] = userVars["DFSTATS_df_tradezone"];
+        params["searchname"] = encodeURI(globalData[itemId]["name"].substring(0, 15));
+        params["memID"] = "";
+        params["searchtype"] = "buyinglistitemname";
+        params["profession"] = "";
+        params["category"] = "";
+        params["search"] = "trades";
+        webCall("trade_search", params, function (data) {
+            itemTrades = filterItemTradeResponseText(data);
+            itemTrades = itemTrades.filter((value) => value["itemId"].split("_")[0] == itemId);
+            itemTrades = itemTrades.slice(0, 5);
+            itemsTradeData[itemId] = {};
+            itemsTradeData[itemId]["timestamp"] = Date.now() / 1000;
+            itemsTradeData[itemId]["trades"] = itemTrades;
+            localStorage.setItem("df_itemsTradeData", JSON.stringify(itemsTradeData));
+            displayTradePrices(lastHoveredItem, appendTo);
+        });
+    }
+
+    function displayTradePrices(itemId, appendTo) {
+        let tradeList = itemsTradeData[itemId]["trades"];
+        let tradePrices = document.getElementById("audaxTradePrices")
+        if (tradePrices) {
+            // remove previous if any is found/regenerated
+            tradePrices.remove();
+        }
+        tradePrices = document.createElement("div");
+        tradePrices.id = "audaxTradePrices";
+        tradePrices.style.color = "#22d2c9";
+        tradePrices.classList.add("itemData");
+        tradePrices.innerHTML += "Trade Prices:<br>"
+        if (tradeList && tradeList.length > 0) {
+            let length = tradeList.length <= 4 ? tradeList.length : 4;
+            for (let i = 0; i < length; i++) {
+                const tradeData = tradeList[i];
+                tradePrices.innerHTML += `&emsp;${formatOrdinalNum(i + 1)}: ${formatCurrency(tradeData["price"])}`;
+                if (i < length - 1) {
+                    tradePrices.innerHTML += `<br>`;
+                }
+            }
+        }
+        document.getElementById("infoBox").style.pointerEvents = "none";
+        if (appendTo && appendTo.parentNode) {
+            appendTo.parentNode.insertBefore(tradePrices, appendTo.nextSibling);
+        } else {
+            document.getElementById("infoBox").appendChild(tradePrices);
+        }
+    }
+
+    function filterItemTradeResponseText(response) {
+        let trades = [];
+        let responseLength = [...response.matchAll(new RegExp("tradelist_[0-9]+_id_member=", "g"))].length;
+        if (response != "") {
+            for (let i = 0; i < responseLength; i++) {
+                let trade = {};
+                trade["tradeId"] = parseInt(
+                    response
+                        .match(new RegExp("tradelist_" + i + "_trade_id=[0-9]+&"))[0]
+                        .split("=")[1]
+                        .match(/[0-9]+/)[0]
+                );
+                trade["itemId"] = response
+                    .match(new RegExp("tradelist_" + i + "_item=[a-zA-Z0-9_ ]+&"))[0]
+                    .split("=")[1]
+                    .match(/[a-zA-Z0-9_]+/)[0];
+                trade["price"] = parseInt(
+                    response
+                        .match(new RegExp("tradelist_" + i + "_price=[0-9]+&"))[0]
+                        .split("=")[1]
+                        .match(/[0-9]+/)[0]
+                );
+                trades.push(trade);
+            }
+        }
+        return trades;
+    }
+
+    function formatCurrency(number) {
+        return new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(number);
+    }
+
+    function formatOrdinalNum(i) {
+        let j = i % 10,
+            k = i % 100;
+        if (j === 1 && k !== 11) {
+            return i + "st";
+        }
+        if (j === 2 && k !== 12) {
+            return i + "nd";
+        }
+        if (j === 3 && k !== 13) {
+            return i + "rd";
+        }
+        return i + "th";
+    }
+
+    // Inject script when page fully loads
+    setTimeout(() => {
+        loadItemsTradeData();
+        marketItemPriceHelper();
+    }, 500);
+})();
