@@ -1,16 +1,16 @@
 // ==UserScript==
-// @name        DF - Item Trade Price Display
+// @name        DF - Item Trade Prices
 // @icon        https://www.google.com/s2/favicons?sz=64&domain=deadfrontier.com
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.5
+// @version     1.0.6
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
 // @supportURL  https://github.com/AudaxLudos/dead-frontier-userscripts/issues
-// @downloadURL https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/main/item-trade-price-display.user.js
-// @updateURL   https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/main/item-trade-price-display.user.js
+// @downloadURL https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/main/item-trade-prices.user.js
+// @updateURL   https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/main/item-trade-prices.user.js
 // @run-at      document-end
 // ==/UserScript==
 
