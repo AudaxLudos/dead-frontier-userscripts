@@ -7,6 +7,7 @@
 // @version     1.0.0
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
+// @run-at      document-end
 // ==/UserScript==
 
 (function () {
@@ -187,11 +188,13 @@
     }
 
     // Inject script when page fully loads
-    setTimeout(() => {
-        if (unsafeWindow.inventoryHolder) {
-            loadItemsTradeData();
-            registerItemSlotListener();
-            registerInfoBoxObserver();
-        }
-    }, 500);
+    window.addEventListener("load", event => {
+        setTimeout(() => {
+            if (unsafeWindow.inventoryHolder) {
+                loadItemsTradeData();
+                registerItemSlotListener();
+                registerInfoBoxObserver();
+            }
+        }, 500);
+    })
 })();
