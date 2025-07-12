@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.1
+// @version     1.0.2
 // @description Adds buttons for quickly depositing or withdrawing cash
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -39,9 +39,6 @@
                 window.location.replace(`${origin}${path}?page=${returnPage}`);
             });
             return;
-        } else if (currentPage === '15' && !urlParams.has('scripts')) {
-            // Do not display withdraw quick links
-            return;
         }
         if (unsafeWindow.jQuery == null) {
             return;
@@ -70,7 +67,7 @@
 
             button.addEventListener("click", event => {
                 unsafeWindow.playSound("bank");
-                if (unsafeWindow.inventoryHolder == null) {
+                if (unsafeWindow.inventoryHolder == null || currentPage === "15") {
                     let url = `${origin}${path}?page=15&scripts=${action}`;
                     if (amount) url += `&amount=${amount}`;
                     if (currentPage) url += `&originPage=${currentPage}`;
