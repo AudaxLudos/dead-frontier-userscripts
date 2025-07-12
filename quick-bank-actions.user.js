@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.2
+// @version     1.0.3
 // @description Adds buttons for quickly depositing or withdrawing cash
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -67,7 +67,7 @@
 
             button.addEventListener("click", event => {
                 unsafeWindow.playSound("bank");
-                if (unsafeWindow.inventoryHolder == null || currentPage === "15") {
+                if (unsafeWindow.inventoryHolder == null && currentPage !== "15") {
                     let url = `${origin}${path}?page=15&scripts=${action}`;
                     if (amount) url += `&amount=${amount}`;
                     if (currentPage) url += `&originPage=${currentPage}`;
@@ -75,13 +75,21 @@
                     return;
                 }
                 makeBankRequest(action, amount, data => {
-                    unsafeWindow.updateIntoArr(flshToArr(data, ""), data);
-                    let cashFields = data.split("&");
-                    let newBankCash = cashFields[1].split("=")[1];
-                    let newHeldCash = cashFields[2].split("=")[1];
-                    userVars["DFSTATS_df_cash"] = newHeldCash;
-                    userVars["DFSTATS_df_bankcash"] = newBankCash;
-                    unsafeWindow.updateAllFields();
+                    if (unsafeWindow.pData) {
+                        unsafeWindow.updateIntoArr(flshToArr(data, ""), unsafeWindow.pData);
+                    } else {
+                        unsafeWindow.updateIntoArr(flshToArr(data, ""), data);
+                    }
+                    if (currentPage === "15") {
+                        unsafeWindow.setupBank();
+                    } else {
+                        let cashFields = data.split("&");
+                        let newBankCash = cashFields[1].split("=")[1];
+                        let newHeldCash = cashFields[2].split("=")[1];
+                        userVars["DFSTATS_df_cash"] = newHeldCash;
+                        userVars["DFSTATS_df_bankcash"] = newBankCash;
+                        unsafeWindow.updateAllFields();
+                    }
                 })
             });
         }
