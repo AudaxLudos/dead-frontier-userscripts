@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.0
+// @version     1.0.1
 // @description Adds buttons to quickly use food, armour and health services
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -23,67 +23,6 @@
     ///////////////////////
     // Utility functions
     ///////////////////////
-    function filterServiceResponseText(response) {
-        let services = {};
-        let responseLength = [...response.matchAll(new RegExp("tradelist_[0-9]+_id_member=", "g"))].length;
-        if (response != "") {
-            for (let i = 0; i < responseLength; i++) {
-                let serviceLevel = parseInt(
-                    response
-                        .match(new RegExp("tradelist_" + i + "_level=[0-9]+&"))[0]
-                        .split("=")[1]
-                        .match(/[0-9]+/)[0]
-                );
-                if (services[serviceLevel] == undefined) {
-                    services[serviceLevel] = [];
-                }
-                let service = {};
-                service["userId"] = parseInt(
-                    response
-                        .match(new RegExp("tradelist_" + i + "_id_member=[0-9]+&"))[0]
-                        .split("=")[1]
-                        .match(/[0-9]+/)[0]
-                );
-                service["price"] = parseInt(
-                    response
-                        .match(new RegExp("tradelist_" + i + "_price=[0-9]+&"))[0]
-                        .split("=")[1]
-                        .match(/[0-9]+/)[0]
-                );
-                services[serviceLevel].push(service);
-            }
-        }
-        return services;
-    }
-
-    function filterItemTradeResponseText(response) {
-        let trades = [];
-        let responseLength = [...response.matchAll(new RegExp("tradelist_[0-9]+_id_member=", "g"))].length;
-        if (response != "") {
-            for (let i = 0; i < responseLength; i++) {
-                let trade = {};
-                trade["tradeId"] = parseInt(
-                    response
-                        .match(new RegExp("tradelist_" + i + "_trade_id=[0-9]+&"))[0]
-                        .split("=")[1]
-                        .match(/[0-9]+/)[0]
-                );
-                trade["itemId"] = response
-                    .match(new RegExp("tradelist_" + i + "_item=[a-zA-Z0-9_ ]+&"))[0]
-                    .split("=")[1]
-                    .match(/[a-zA-Z0-9_]+/)[0];
-                trade["price"] = parseInt(
-                    response
-                        .match(new RegExp("tradelist_" + i + "_price=[0-9]+&"))[0]
-                        .split("=")[1]
-                        .match(/[0-9]+/)[0]
-                );
-                trades.push(trade);
-            }
-        }
-        return trades;
-    }
-
     function resetPromptContent() {
         let gameContent = document.getElementById("gamecontent");
         if (gameContent) {

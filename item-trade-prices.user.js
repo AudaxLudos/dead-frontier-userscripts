@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.6
+// @version     1.0.7
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -12,6 +12,7 @@
 // @downloadURL https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/main/item-trade-prices.user.js
 // @updateURL   https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/main/item-trade-prices.user.js
 // @run-at      document-end
+// @require     https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/main/utils.js
 // ==/UserScript==
 
 (function () {
@@ -129,7 +130,7 @@
             let length = tradeList.length <= 4 ? tradeList.length : 4;
             for (let i = 0; i < length; i++) {
                 const tradeData = tradeList[i];
-                tradePrices.innerHTML += `&emsp;${formatOrdinalNum(i + 1)}: ${formatCurrency(tradeData["price"])}`;
+                tradePrices.innerHTML += `&emsp;${formatOrdinalNum(i + 1)}: $${unsafeWindow.nf.format(tradeData["price"])}`;
                 if (i < length - 1) {
                     tradePrices.innerHTML += `<br>`;
                 }
@@ -141,43 +142,6 @@
         } else {
             document.getElementById("infoBox").appendChild(tradePrices);
         }
-    }
-
-    function filterItemTradeResponseText(response) {
-        let trades = [];
-        let responseLength = [...response.matchAll(new RegExp("tradelist_[0-9]+_id_member=", "g"))].length;
-        if (response != "") {
-            for (let i = 0; i < responseLength; i++) {
-                let trade = {};
-                trade["tradeId"] = parseInt(
-                    response
-                        .match(new RegExp("tradelist_" + i + "_trade_id=[0-9]+&"))[0]
-                        .split("=")[1]
-                        .match(/[0-9]+/)[0]
-                );
-                trade["itemId"] = response
-                    .match(new RegExp("tradelist_" + i + "_item=[a-zA-Z0-9_ ]+&"))[0]
-                    .split("=")[1]
-                    .match(/[a-zA-Z0-9_]+/)[0];
-                trade["price"] = parseInt(
-                    response
-                        .match(new RegExp("tradelist_" + i + "_price=[0-9]+&"))[0]
-                        .split("=")[1]
-                        .match(/[0-9]+/)[0]
-                );
-                trades.push(trade);
-            }
-        }
-        return trades;
-    }
-
-    function formatCurrency(number) {
-        return new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-        }).format(number);
     }
 
     function formatOrdinalNum(i) {
