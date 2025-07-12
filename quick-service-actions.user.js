@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.1
+// @version     1.0.2
 // @description Adds buttons to quickly use food, armour and health services
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -86,9 +86,6 @@
     // Main functions
     ///////////////////////
     function addFeedServiceButton() {
-        if (unsafeWindow.inventoryHolder == null || window.location.href.indexOf("index.php?page=35") == -1) {
-            return;
-        }
         let hungerElement = document.getElementsByClassName("playerNourishment")[0];
         hungerElement.style.top = "";
         let foodServiceButton = document.getElementById("audaxFoodServiceButton");
@@ -212,9 +209,6 @@
     }
 
     function addHealServiceButton() {
-        if (unsafeWindow.inventoryHolder == null || window.location.href.indexOf("index.php?page=35") == -1) {
-            return;
-        }
         let healthElement = document.getElementsByClassName("playerHealth")[0];
         healthElement.style.top = "";
         let healthServiceButton = document.getElementById("audaxHealthServiceButton");
@@ -374,7 +368,7 @@
     }
 
     function addRepairServiceButton() {
-        if (unsafeWindow.inventoryHolder == null || window.location.href.indexOf("index.php?page=35") == -1 || !userVars["DFSTATS_df_armourtype"]) {
+        if (!userVars["DFSTATS_df_armourtype"]) {
             return;
         }
         let armourElement = document.getElementById("sidebarArmour");
@@ -446,10 +440,12 @@
     // Inject script when page fully loads
     window.addEventListener("load", event => {
         setTimeout(() => {
-            console.log("Audax Scripts: starting quick bank actions userscript");
-            addFeedServiceButton();
-            addHealServiceButton();
-            addRepairServiceButton();
+            if (window.location.href.indexOf("index.php?page=35") > -1) {
+                console.log("Audax Scripts: starting quick service actions userscript");
+                addFeedServiceButton();
+                addHealServiceButton();
+                addRepairServiceButton();
+            }
         }, 500);
     })
 })();
