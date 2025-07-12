@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.0
+// @version     1.0.1
 // @description Adds buttons for quickly accessing pages
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -70,6 +70,15 @@
             link.href = `index.php?page=${outpostLinks[i].id}`
             link.innerHTML = outpostLinks[i].name;
             container.appendChild(link);
+
+            link.addEventListener("mouseenter", event => {
+                link.style.filter = "brightness(140%)";
+                link.style.textShadow = "0 0 5px white";
+            })
+            link.addEventListener("mouseout", event => {
+                link.style.filter = "";
+                link.style.textShadow = "0 0 5px red";
+            })
         }
 
         quickLinksContainer.prepend(container);
