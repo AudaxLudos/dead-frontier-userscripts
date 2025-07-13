@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.7
+// @version     1.0.8
 // @description Adds buttons for quickly depositing or withdrawing cash
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -30,8 +30,7 @@
         { name: "Withdraw All", action: "withdraw", amount: 9999999999999 },
     ];
 
-    function addBankActionButtons() {
-        // Runs when bank action request is outside inventory
+    function startBankActionOutsideInventory() {
         if (currentPage === '15' && urlParams.has('scripts')) {
             const action = urlParams.get('scripts');
             const amount = urlParams.get('amount');
@@ -41,6 +40,9 @@
             });
             return;
         }
+    }
+
+    function addBankActionButtons() {
         if (unsafeWindow.jQuery == null) {
             return;
         }
@@ -66,7 +68,11 @@
             button.innerHTML = bankActions[i].name;
             container.appendChild(button);
 
-            button.addEventListener("click", event => {
+            button.addEventListener("click", async event => {
+                let actionButtons = container.querySelectorAll('button');
+                for (let actionButton of actionButtons) {
+                    actionButton.disabled = true;
+                }
                 unsafeWindow.playSound("bank");
                 if (unsafeWindow.inventoryHolder == null && currentPage !== "15") {
                     let url = `${origin}${path}?page=15&scripts=${action}`;
@@ -75,7 +81,10 @@
                     window.location.replace(url);
                     return;
                 }
-                makeBankRequest(action, amount, data => {
+                await makeBankRequest(action, amount, data => {
+                    for (let actionButton of actionButtons) {
+                        actionButton.disabled = false;
+                    }
                     if (unsafeWindow.pData) {
                         unsafeWindow.updateIntoArr(flshToArr(data, ""), unsafeWindow.pData);
                     } else {
@@ -105,6 +114,7 @@
     window.addEventListener("load", event => {
         setTimeout(() => {
             console.log("Audax Scripts: starting quick bank actions userscript");
+            startBankActionOutsideInventory();
             addBankActionButtons();
         }, 500);
     });
