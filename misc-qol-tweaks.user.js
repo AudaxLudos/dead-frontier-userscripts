@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.0
+// @version     1.0.1
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -78,11 +78,72 @@
         marketListObserver.observe(target, config);
     }
 
+    function expandInventoryToSidebarHelper() {
+        function overrideDisplayPlacementMessage(msg, x, y, type) {
+            let gameWindow = document.getElementById("gameWindow");
+            let oldInventoryHolder = unsafeWindow.inventoryHolder;
+            unsafeWindow.inventoryHolder = gameWindow;
+            unsafeWindow.vanillaDisplayPlacementMessage(msg, x, y, type);
+            unsafeWindow.inventoryHolder = oldInventoryHolder;
+        }
+
+        function overrideFakeItemDrag(e) {
+            let gameWindow = document.getElementById("gameWindow");
+            let oldInventoryHolder = unsafeWindow.inventoryHolder;
+            unsafeWindow.inventoryHolder = gameWindow;
+            unsafeWindow.drag(e);
+            unsafeWindow.inventoryHolder = oldInventoryHolder;
+        }
+
+        if (unsafeWindow.inventoryHolder == null) {
+            return;
+        }
+
+        let tooltip = document.getElementById("textAddon");
+        let newParent = tooltip.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
+        tooltip.style.position = "absolute";
+        tooltip.style.fontFamily = "Courier New,Arial";
+        tooltip.style.fontWeight = 600;
+        tooltip.style.textAlign = "center";
+        tooltip.style.zIndex = 20;
+        newParent.id = "gameWindow";
+        newParent.style.position = "relative";
+        newParent.appendChild(tooltip);
+
+        unsafeWindow.vanillaDisplayPlacementMessage = unsafeWindow.displayPlacementMessage;
+        unsafeWindow.displayPlacementMessage = overrideDisplayPlacementMessage;
+
+        unsafeWindow.inventoryHolder.removeEventListener("mousemove", unsafeWindow.drag);
+        newParent.addEventListener("mousemove", overrideFakeItemDrag);
+
+        let fakeGrabbedItem = document.getElementById("fakeGrabbedItem");
+        fakeGrabbedItem.style.position = "absolute";
+        fakeGrabbedItem.style.display = "none";
+        fakeGrabbedItem.style.width = "40px";
+        fakeGrabbedItem.style.height = "40px";
+        fakeGrabbedItem.style.opacity = 0.6;
+        newParent.appendChild(fakeGrabbedItem);
+
+        let interactionWindow = document.createElement("div");
+        interactionWindow.style.position = "absolute";
+        interactionWindow.style.width = "85px";
+        interactionWindow.style.height = "270px";
+        interactionWindow.style.left = "0px";
+        interactionWindow.style.top = "80px";
+        interactionWindow.style.backgroundImage = "none";
+        interactionWindow.dataset.action = "giveToChar";
+        interactionWindow.className = "fakeSlot";
+        document.getElementById("sidebar").appendChild(interactionWindow);
+    }
+
     // Inject script when page fully loads
     setTimeout(() => {
-        if (unsafeWindow.inventoryHolder !== undefined || window.location.href.indexOf("index.php?page=35") > -1) {
+        if (unsafeWindow.inventoryHolder !== undefined) {
             console.log("Audax Scripts: starting misc qol tweaks userscript");
-            registerMarketListingsObserver();
+            expandInventoryToSidebarHelper();
+            if (window.location.href.indexOf("index.php?page=35") > -1) {
+                registerMarketListingsObserver();
+            }
         }
     }, 1000);
 })();
