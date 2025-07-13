@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.7
+// @version     1.0.8
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -125,8 +125,9 @@
         tradePrices.id = "audaxTradePrices";
         tradePrices.style.color = "#22d2c9";
         tradePrices.classList.add("itemData");
-        tradePrices.innerHTML += "Trade Prices:<br>"
+        tradePrices.innerHTML += "Trade Prices:"
         if (tradeList && tradeList.length > 0) {
+            tradePrices.innerHTML += "<br>";
             let length = tradeList.length <= 4 ? tradeList.length : 4;
             for (let i = 0; i < length; i++) {
                 const tradeData = tradeList[i];
@@ -135,6 +136,8 @@
                     tradePrices.innerHTML += `<br>`;
                 }
             }
+        } else {
+            tradePrices.innerHTML += " Non found";
         }
         document.getElementById("infoBox").style.pointerEvents = "none";
         if (appendTo && appendTo.parentNode) {
