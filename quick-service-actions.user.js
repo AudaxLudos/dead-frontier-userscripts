@@ -30,15 +30,6 @@
         }
     }
 
-    function openLoadingPrompt(message) {
-        let prompt = document.getElementById("prompt");
-        let gameContent = document.getElementById("gamecontent");
-
-        prompt.style.display = "block";
-        gameContent.classList.remove("warning");
-        gameContent.innerHTML = `<div style="text-align: center;">${message}</div>`;
-    }
-
     function openPromptWithButton(message, buttonName, buttonCallback) {
         let prompt = document.getElementById("prompt");
         let gameContent = document.getElementById("gamecontent");
@@ -82,29 +73,115 @@
         gameContent.appendChild(noButton);
     }
 
+    function openYesOrNoPromptAsync(message) {
+        return new Promise((resolve, reject) => {
+            openYesOrNoPrompt(
+                message,
+                () => resolve(true),
+                () => resolve(false)
+            );
+        });
+    }
+
+    function findCheapestAndOptimalFoodListings(listings, target) {
+        let minCost = Infinity;
+        let bestCombo = [];
+
+        function backtrack(index, currentRestore, currentCost, selectedListings) {
+            if (currentRestore >= target) {
+                if (currentCost < minCost) {
+                    minCost = currentCost;
+                    bestCombo = [...selectedListings];
+                }
+                return;
+            }
+
+            if (index >= listings.length || currentCost >= minCost) return;
+
+            // Option 1: skip current trade
+            backtrack(index + 1, currentRestore, currentCost, selectedListings);
+
+            // Option 2: include current trade
+            const trade = listings[index];
+            const trueItemId = trade["itemId"].split("_")[0];
+            const isFoodCooked = trade["itemId"].includes("cooked");
+            const itemData = globalData[trueItemId];
+            const foodRestoreValue = isFoodCooked ? itemData["foodrestore"] * 3 : itemData["foodrestore"]
+            selectedListings.push(trade);
+            backtrack(index + 1, currentRestore + foodRestoreValue, currentCost + trade["price"], selectedListings);
+            selectedListings.pop(); // backtrack
+        }
+
+        backtrack(0, 0, 0, []);
+        return bestCombo;
+    }
+
+    function findCheapestAndOptimalMeds(meds, healthNeeded, doctorFee) {
+        meds = meds.map((med, index) => ({ ...med, uid: index }));
+
+        let bestCost = Infinity;
+        let bestCombo = null;
+
+        function backtrack(index, used, healTotal, costTotal, useDoctor) {
+            if (healTotal >= healthNeeded) {
+                if (costTotal < bestCost) {
+                    bestCost = costTotal;
+                    bestCombo = [...used];
+                }
+                return;
+            }
+            if (index >= meds.length || costTotal >= bestCost) return;
+
+            const med = meds[index];
+            const medData = globalData[med["itemId"]];
+            const medRawHealthRestore = medData["healthrestore"];
+
+            // Option 1: Self-use
+            used.push({
+                ...med,
+                useDoctor: false
+            });
+            backtrack(index + 1, used, healTotal + medRawHealthRestore, costTotal + med["price"], useDoctor);
+            used.pop();
+
+            // Option 2: Use with doctor if allowed
+            if (medData["needdoctor"]) {
+                const docFee = useDoctor ? doctorFee : 0;
+                used.push({
+                    ...med,
+                    useDoctor: true
+                });
+                backtrack(index + 1, used, healTotal + medRawHealthRestore * 3, costTotal + med["price"] + docFee, true);
+                used.pop();
+            }
+
+            // Option 3: Skip
+            backtrack(index + 1, used, healTotal, costTotal, useDoctor);
+        }
+
+        backtrack(0, [], 0, 0, false);
+        return bestCombo;
+    }
+
     ///////////////////////
     // Main functions
     ///////////////////////
     function addFeedServiceButton() {
         let hungerElement = document.getElementsByClassName("playerNourishment")[0];
         hungerElement.style.top = "";
-        let foodServiceButton = document.getElementById("audaxFoodServiceButton");
-        if (foodServiceButton != null) {
-            foodServiceButton.remove();
-        }
-        foodServiceButton = document.createElement("button");
-        foodServiceButton.id = "audaxFoodServiceButton";
-        foodServiceButton.classList.add("opElem");
-        foodServiceButton.style.left = "37px";
-        foodServiceButton.style.top = "25px";
-        foodServiceButton.innerHTML = "Replenish";
-        hungerElement.parentElement.appendChild(foodServiceButton);
+        let feedServiceButton = document.createElement("button");
+        feedServiceButton.id = "audaxFoodServiceButton";
+        feedServiceButton.classList.add("opElem");
+        feedServiceButton.style.left = "37px";
+        feedServiceButton.style.top = "25px";
+        feedServiceButton.innerHTML = "Replenish";
+        hungerElement.parentElement.appendChild(feedServiceButton);
 
-        foodServiceButton.addEventListener("click", async event => {
+        feedServiceButton.addEventListener("click", async event => {
             try {
                 let inventorySlotNumber = unsafeWindow.findLastEmptyGenericSlot("inv");
-                foodServiceButton.disabled = false;
-                openLoadingPrompt("Getting optimal foods and cooking services...");
+                feedServiceButton.disabled = false;
+                unsafeWindow.promptLoading("Getting optimal foods and cooking services...");
 
                 if (parseInt(userVars["DFSTATS_df_hungerhp"]) >= 100) {
                     throw "Nourishment is full";
@@ -143,91 +220,44 @@
                     throw "You do not have enough cash";
                 }
 
-                openYesOrNoPrompt(
-                    `Buy and use <span style="color: red;">${isFoodCooked ? "Cooked " : " "}${itemData["name"]}</span> for <span style="color: #FFCC00;">$${nf.format(optimalFood["price"])}</span>?`,
-                    async event => {
-                        try {
-                            // buy food
-                            await makeInventoryRequest("undefined", optimalFood["tradeId"], "undefined`undefined", optimalFood["price"], "", "", "0", "0", "0", "newbuy");
-                            unsafeWindow.playSound("buysell");
-                            // consume food
-                            await makeInventoryRequest("0", "0", "undefined`undefined", "-1", optimalFood["itemId"], "", inventorySlotNumber, "0", "0", "newconsume");
-                            unsafeWindow.playSound("eat");
-                            unsafeWindow.updateAllFields();
-                            foodServiceButton.disabled = false;
-                        } catch (error) {
-                            unsafeWindow.updateAllFields();
-                            foodServiceButton.disabled = false;
-                        }
-                    },
-                    event => {
-                        unsafeWindow.updateAllFields();
-                        foodServiceButton.disabled = false;
-                        resetPromptContent();
-                    }
-                );
+                let confirmed = await openYesOrNoPromptAsync(`Buy and use <span style="color: red;">${isFoodCooked ? "Cooked " : " "}${itemData["name"]}</span> for <span style="color: #FFCC00;">$${nf.format(optimalFood["price"])}</span>?`);
+                if (confirmed) {
+                    unsafeWindow.promptLoading("Satiating hunger...");
+                    // buy food
+                    await makeInventoryRequest("undefined", optimalFood["tradeId"], "undefined`undefined", optimalFood["price"], "", "", "0", "0", "0", "newbuy");
+                    unsafeWindow.playSound("buysell");
+                    // consume food
+                    await makeInventoryRequest("0", "0", "undefined`undefined", "-1", optimalFood["itemId"], "", inventorySlotNumber, "0", "0", "newconsume");
+                    unsafeWindow.playSound("eat");
+                }
+                unsafeWindow.updateAllFields();
+                unsafeWindow.promptEnd();
+                feedServiceButton.disabled = false;
             } catch (error) {
                 openPromptWithButton(error, "Close", event => {
                     unsafeWindow.updateAllFields();
-                    foodServiceButton.disabled = false;
+                    feedServiceButton.disabled = false;
                 });
             }
         });
     }
 
-    function findCheapestAndOptimalFoodListings(listings, target) {
-        let minCost = Infinity;
-        let bestCombo = [];
-
-        function backtrack(index, currentRestore, currentCost, selectedListings) {
-            if (currentRestore >= target) {
-                if (currentCost < minCost) {
-                    minCost = currentCost;
-                    bestCombo = [...selectedListings];
-                }
-                return;
-            }
-
-            if (index >= listings.length || currentCost >= minCost) return;
-
-            // Option 1: skip current trade
-            backtrack(index + 1, currentRestore, currentCost, selectedListings);
-
-            // Option 2: include current trade
-            const trade = listings[index];
-            const trueItemId = trade["itemId"].split("_")[0];
-            const isFoodCooked = trade["itemId"].includes("cooked");
-            const itemData = globalData[trueItemId];
-            const foodRestoreValue = isFoodCooked ? itemData["foodrestore"] * 3 : itemData["foodrestore"]
-            selectedListings.push(trade);
-            backtrack(index + 1, currentRestore + foodRestoreValue, currentCost + trade["price"], selectedListings);
-            selectedListings.pop(); // backtrack
-        }
-
-        backtrack(0, 0, 0, []);
-        return bestCombo;
-    }
-
     function addHealServiceButton() {
         let healthElement = document.getElementsByClassName("playerHealth")[0];
         healthElement.style.top = "";
-        let healthServiceButton = document.getElementById("audaxHealthServiceButton");
-        if (healthServiceButton != null) {
-            healthServiceButton.remove();
-        }
-        healthServiceButton = document.createElement("button");
-        healthServiceButton.id = "audaxHealthServiceButton";
-        healthServiceButton.classList.add("opElem");
-        healthServiceButton.style.left = "43px";
-        healthServiceButton.style.top = "25px";
-        healthServiceButton.innerHTML = "Restore";
-        healthElement.parentElement.appendChild(healthServiceButton);
+        let healServiceButton = document.createElement("button");
+        healServiceButton.id = "audaxHealthServiceButton";
+        healServiceButton.classList.add("opElem");
+        healServiceButton.style.left = "43px";
+        healServiceButton.style.top = "25px";
+        healServiceButton.innerHTML = "Restore";
+        healthElement.parentElement.appendChild(healServiceButton);
 
-        healthServiceButton.addEventListener("click", async event => {
+        healServiceButton.addEventListener("click", async event => {
             try {
                 let inventorySlotNumber = unsafeWindow.findLastEmptyGenericSlot("inv");
-                healthServiceButton.disabled = true;
-                openLoadingPrompt("Getting optimal meds and healing services...");
+                healServiceButton.disabled = true;
+                unsafeWindow.promptLoading("Getting optimal meds and healing services...");
 
                 if (parseInt(userVars["DFSTATS_df_hpcurrent"]) >= parseInt(userVars["DFSTATS_df_hpmax"])) {
                     throw "Health is full";
@@ -284,87 +314,30 @@
                     }
                 }
 
-                openYesOrNoPrompt(
-                    `Buy <span style="color: red;">${itemData["name"]}</span> for <span style="color: #FFCC00;">$${nf.format(optimalMed["price"])}</span> and ${optimalMed["useDoctor"] ? `administer it for <span style="color: #FFCC00;">$${nf.format(docService["price"])}</span>. Totaling <span style="color: #FFCC00;">$${nf.format(totalCost)}</span>` : "use it"}?`,
-                    async (event) => {
-                        openLoadingPrompt("Restoring health...");
-                        try {
-                            // buy med
-                            await makeInventoryRequest("undefined", optimalMed["tradeId"], "undefined`undefined", `${optimalMed["price"]}`, "", "", "0", "0", "0", "newbuy");
-                            if (optimalMed["useDoctor"]) {
-                                // administer med
-                                await makeInventoryRequest("0", docService["userId"], "undefined`undefined", docService["price"], "", "", inventorySlotNumber, "0", unsafeWindow.getUpgradePrice(), "buyadminister");
-                            } else {
-                                // use med
-                                await makeInventoryRequest("0", "0", "undefined`undefined", "-1", optimalMed["itemId"], "", inventorySlotNumber, "0", "0", "newuse");
-                            }
-                            unsafeWindow.playSound("heal");
-                            unsafeWindow.updateAllFields();
-                            healthServiceButton.disabled = false;
-                        } catch (error) {
-                            unsafeWindow.updateAllFields();
-                            healthServiceButton.disabled = false;
-                        }
-                    },
-                    (event) => {
-                        unsafeWindow.updateAllFields()
-                        healthServiceButton.disabled = false;
+                let confirmed = await openYesOrNoPromptAsync(`Buy <span style="color: red;">${itemData["name"]}</span> for <span style="color: #FFCC00;">$${nf.format(optimalMed["price"])}</span> and ${optimalMed["useDoctor"] ? `administer it for <span style="color: #FFCC00;">$${nf.format(docService["price"])}</span>. Totaling <span style="color: #FFCC00;">$${nf.format(totalCost)}</span>` : "use it"}?`);
+                if (confirmed) {
+                    unsafeWindow.promptLoading("Replenishing health...");
+                    // buy med
+                    await makeInventoryRequest("undefined", optimalMed["tradeId"], "undefined`undefined", `${optimalMed["price"]}`, "", "", "0", "0", "0", "newbuy");
+                    if (optimalMed["useDoctor"]) {
+                        // administer med
+                        await makeInventoryRequest("0", docService["userId"], "undefined`undefined", docService["price"], "", "", inventorySlotNumber, "0", unsafeWindow.getUpgradePrice(), "buyadminister");
+                    } else {
+                        // use med
+                        await makeInventoryRequest("0", "0", "undefined`undefined", "-1", optimalMed["itemId"], "", inventorySlotNumber, "0", "0", "newuse");
                     }
-                );
+                    unsafeWindow.playSound("heal");
+                }
+                unsafeWindow.updateAllFields();
+                unsafeWindow.promptEnd();
+                healServiceButton.disabled = false;
             } catch (error) {
                 openPromptWithButton(error, "Close", event => {
                     unsafeWindow.updateAllFields();
-                    healthServiceButton.disabled = false;
+                    healServiceButton.disabled = false;
                 });
             }
         });
-    }
-
-    function findCheapestAndOptimalMeds(meds, healthNeeded, doctorFee) {
-        meds = meds.map((med, index) => ({ ...med, uid: index }));
-
-        let bestCost = Infinity;
-        let bestCombo = null;
-
-        function backtrack(index, used, healTotal, costTotal, useDoctor) {
-            if (healTotal >= healthNeeded) {
-                if (costTotal < bestCost) {
-                    bestCost = costTotal;
-                    bestCombo = [...used];
-                }
-                return;
-            }
-            if (index >= meds.length || costTotal >= bestCost) return;
-
-            const med = meds[index];
-            const medData = globalData[med["itemId"]];
-            const medRawHealthRestore = medData["healthrestore"];
-
-            // Option 1: Self-use
-            used.push({
-                ...med,
-                useDoctor: false
-            });
-            backtrack(index + 1, used, healTotal + medRawHealthRestore, costTotal + med["price"], useDoctor);
-            used.pop();
-
-            // Option 2: Use with doctor if allowed
-            if (medData["needdoctor"]) {
-                const docFee = useDoctor ? doctorFee : 0;
-                used.push({
-                    ...med,
-                    useDoctor: true
-                });
-                backtrack(index + 1, used, healTotal + medRawHealthRestore * 3, costTotal + med["price"] + docFee, true);
-                used.pop();
-            }
-
-            // Option 3: Skip
-            backtrack(index + 1, used, healTotal, costTotal, useDoctor);
-        }
-
-        backtrack(0, [], 0, 0, false);
-        return bestCombo;
     }
 
     function addRepairServiceButton() {
@@ -372,11 +345,7 @@
             return;
         }
         let armourElement = document.getElementById("sidebarArmour");
-        let repairServiceButton = document.getElementById("audaxRepairServiceButton");
-        if (repairServiceButton != null) {
-            repairServiceButton.remove();
-        }
-        repairServiceButton = document.createElement("button");
+        let repairServiceButton = document.createElement("button");
         repairServiceButton.id = "audaxRepairServiceButton";
         repairServiceButton.classList.add("opElem");
         repairServiceButton.style.left = "46px";
@@ -387,7 +356,7 @@
         repairServiceButton.addEventListener("click", async event => {
             try {
                 repairServiceButton.disabled = false;
-                openLoadingPrompt("Getting optimal repairing services...");
+                unsafeWindow.promptLoading("Getting optimal repairing services...");
 
                 if (parseInt(userVars["DFSTATS_df_armourhp"]) >= parseInt(userVars["DFSTATS_df_armourhpmax"])) {
                     throw "Armour durability is full";
@@ -407,27 +376,15 @@
                     throw "You do not have enough cash";
                 }
 
-                openYesOrNoPrompt(
-                    `Repair your <span style="color: red;">${userVars["DFSTATS_df_armourname"]}</span> for <span style="color: #FFCC00;">$${nf.format(repairService["price"])}</span>?`,
-                    async event => {
-                        openLoadingPrompt("Repairing armour...");
-                        // repair equipped armor
-                        try {
-                            await makeInventoryRequest("0", repairService["userId"], "undefined`undefined", repairService["price"], userVars["DFSTATS_df_armourtype"], "", "34", "0", unsafeWindow.getUpgradePrice(), "buyrepair");
-                            unsafeWindow.playSound("repair");
-                            unsafeWindow.updateAllFields();
-                            repairServiceButton.disabled = false;
-                        } catch (error) {
-                            unsafeWindow.updateAllFields();
-                            repairServiceButton.disabled = false;
-                        }
-                    },
-                    event => {
-                        unsafeWindow.updateAllFields();
-                        repairServiceButton.disabled = false;
-                        resetPromptContent();
-                    }
-                );
+                let confirmed = await openYesOrNoPromptAsync(`Repair your <span style="color: red;">${userVars["DFSTATS_df_armourname"]}</span> for <span style="color: #FFCC00;">$${nf.format(repairService["price"])}</span>?`);
+                if (confirmed) {
+                    unsafeWindow.promptLoading("Repairing armour...");
+                    await makeInventoryRequest("0", repairService["userId"], "undefined`undefined", repairService["price"], userVars["DFSTATS_df_armourtype"], "", "34", "0", unsafeWindow.getUpgradePrice(), "buyrepair");
+                    unsafeWindow.playSound("repair");
+                }
+                unsafeWindow.updateAllFields();
+                unsafeWindow.promptEnd();
+                foodServiceButton.disabled = false;
             } catch (error) {
                 openPromptWithButton(error, "Close", event => {
                     unsafeWindow.updateAllFields();
