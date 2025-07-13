@@ -114,5 +114,5 @@
             console.log("Audax Scripts: starting outpost quick links userscript");
             addQuickLinkButtons();
         }, 500);
-    })
+    });
 })();

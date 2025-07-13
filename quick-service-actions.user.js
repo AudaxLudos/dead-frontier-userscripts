@@ -447,5 +447,5 @@
                 addRepairServiceButton();
             }
         }, 500);
-    })
+    });
 })();

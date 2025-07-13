@@ -172,5 +172,5 @@
                 registerInfoBoxObserver();
             }
         }, 500);
-    })
+    });
 })();

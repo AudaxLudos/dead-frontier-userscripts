@@ -136,5 +136,5 @@
             console.log("Audax Scripts: starting quick bank actions userscript");
             addBankActionButtons();
         }, 500);
-    })
+    });
 })();
