@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.10
+// @version     1.0.11
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -35,6 +35,21 @@
         }
     }
 
+    function formatOrdinalNum(i) {
+        let j = i % 10,
+            k = i % 100;
+        if (j === 1 && k !== 11) {
+            return i + "st";
+        }
+        if (j === 2 && k !== 12) {
+            return i + "nd";
+        }
+        if (j === 3 && k !== 13) {
+            return i + "rd";
+        }
+        return i + "th";
+    }
+
     function registerItemSlotListener() {
         const slots = document.getElementsByClassName('validSlot');
         for (let i = 0; i < slots.length; i++) {
@@ -63,7 +78,7 @@
                     let scrapPriceDivIndex = Object.values(mutation.addedNodes).findIndex(node => node.className === "itemData" && node.textContent.includes("Scrap Price"));
                     let scrapPriceDiv = Object.values(mutation.addedNodes).at(scrapPriceDivIndex);
                     if (isVanillaMutation && hoveredItem) {
-                        getItemTradeData(hoveredItem, scrapPriceDiv);
+                        injectItemTradePrices(hoveredItem, scrapPriceDiv);
                         break;
                     }
                 }
@@ -73,7 +88,7 @@
         infoBoxObserver.observe(target, config);
     }
 
-    function getItemTradeData(itemId, appendTo) {
+    function injectItemTradePrices(itemId, appendTo) {
         let itemData = globalData[itemId];
         if (itemData && itemData["no_transfer"]) {
             return;
@@ -145,21 +160,6 @@
         } else {
             document.getElementById("infoBox").appendChild(tradePrices);
         }
-    }
-
-    function formatOrdinalNum(i) {
-        let j = i % 10,
-            k = i % 100;
-        if (j === 1 && k !== 11) {
-            return i + "st";
-        }
-        if (j === 2 && k !== 12) {
-            return i + "nd";
-        }
-        if (j === 3 && k !== 13) {
-            return i + "rd";
-        }
-        return i + "th";
     }
 
     // Inject script when page fully loads
