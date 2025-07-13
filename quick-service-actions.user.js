@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.4
+// @version     1.0.6
 // @description Adds buttons to quickly use food, armour and health services
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -19,17 +19,11 @@
     "use strict";
 
     const globalData = unsafeWindow.globalData;
+    let userVars = unsafeWindow.userVars;
 
     ///////////////////////
     // Utility functions
     ///////////////////////
-    function resetPromptContent() {
-        let gameContent = document.getElementById("gamecontent");
-        if (gameContent) {
-            gameContent.classList.remove("warning");
-        }
-    }
-
     function openPromptWithButton(message, buttonName, buttonCallback) {
         let prompt = document.getElementById("prompt");
         let gameContent = document.getElementById("gamecontent");
@@ -77,39 +71,45 @@
         return new Promise((resolve, reject) => {
             openYesOrNoPrompt(
                 message,
-                () => resolve(true),
-                () => resolve(false)
+                (event) => {
+                    unsafeWindow.promptEnd();
+                    resolve(true)
+                },
+                (event) => {
+                    unsafeWindow.promptEnd();
+                    resolve(false)
+                }
             );
         });
     }
 
-    function findCheapestAndOptimalFoodListings(listings, target) {
+    function findCheapestAndOptimalFoodTrades(trades, target) {
         let minCost = Infinity;
         let bestCombo = [];
 
-        function backtrack(index, currentRestore, currentCost, selectedListings) {
+        function backtrack(index, currentRestore, currentCost, selectedTrades) {
             if (currentRestore >= target) {
                 if (currentCost < minCost) {
                     minCost = currentCost;
-                    bestCombo = [...selectedListings];
+                    bestCombo = [...selectedTrades];
                 }
                 return;
             }
 
-            if (index >= listings.length || currentCost >= minCost) return;
+            if (index >= trades.length || currentCost >= minCost) return;
 
             // Option 1: skip current trade
-            backtrack(index + 1, currentRestore, currentCost, selectedListings);
+            backtrack(index + 1, currentRestore, currentCost, selectedTrades);
 
             // Option 2: include current trade
-            const trade = listings[index];
+            const trade = trades[index];
             const trueItemId = trade["itemId"].split("_")[0];
             const isFoodCooked = trade["itemId"].includes("cooked");
             const itemData = globalData[trueItemId];
             const foodRestoreValue = isFoodCooked ? itemData["foodrestore"] * 3 : itemData["foodrestore"]
-            selectedListings.push(trade);
-            backtrack(index + 1, currentRestore + foodRestoreValue, currentCost + trade["price"], selectedListings);
-            selectedListings.pop(); // backtrack
+            selectedTrades.push(trade);
+            backtrack(index + 1, currentRestore + foodRestoreValue, currentCost + trade["price"], selectedTrades);
+            selectedTrades.pop(); // backtrack
         }
 
         backtrack(0, 0, 0, []);
@@ -190,9 +190,9 @@
                     throw "Inventory is full";
                 }
 
-                // get food listings
-                let foodListings = await makeMarketSearchRequest("", "", "food", "trades", "buyinglistcategory", filterItemTradeResponseText);
-                let eligibleFoodListings = foodListings.filter(value => {
+                // get food trades
+                let foodTrades = await makeMarketSearchRequest("", "", "food", "trades", "buyinglistcategory", filterItemTradeResponseText);
+                let eligibleFoodTrades = foodTrades.filter(value => {
                     let trueItemId = value["itemId"].split("_")[0];
                     let itemData = globalData[trueItemId];
                     let itemLevel = itemData["level"];
@@ -207,13 +207,13 @@
                         && !((playerLevel > itemLevel + 10 && itemLevel < 40) || (playerLevel > 70 && itemLevel === 40))
                 });
 
-                let optimalFoodListings = findCheapestAndOptimalFoodListings(eligibleFoodListings, 100 - parseInt(userVars["DFSTATS_df_hungerhp"]));
-                let optimalFood = optimalFoodListings[0];
+                let optimalFoodTrades = findCheapestAndOptimalFoodTrades(eligibleFoodTrades, 100 - parseInt(userVars["DFSTATS_df_hungerhp"]));
+                let optimalFood = optimalFoodTrades[0];
                 let trueItemId = optimalFood["itemId"].split("_")[0];
                 let isFoodCooked = optimalFood["itemId"].includes("cooked");
                 let itemData = globalData[trueItemId];
 
-                if (optimalFoodListings === undefined || optimalFoodListings.length == 0) {
+                if (optimalFoodTrades === undefined || optimalFoodTrades.length == 0) {
                     throw `No ${itemData["name"]} trades available`;
                 }
                 if (userVars["DFSTATS_df_cash"] < optimalFood["price"]) {
@@ -230,6 +230,7 @@
                     await makeInventoryRequest("0", "0", "undefined`undefined", "-1", optimalFood["itemId"], "", inventorySlotNumber, "0", "0", "newconsume");
                     unsafeWindow.playSound("eat");
                 }
+
                 unsafeWindow.updateAllFields();
                 unsafeWindow.promptEnd();
                 feedServiceButton.disabled = false;
@@ -266,37 +267,34 @@
                     throw "Inventory is full";
                 }
 
-                let allMedListings = await makeMarketSearchRequest("", "", "medical", "trades", "buyinglistcategory", filterItemTradeResponseText);
-                let eligibleMedListings = allMedListings.filter(value => {
+                let medTrades = await makeMarketSearchRequest("", "", "medical", "trades", "buyinglistcategory", filterItemTradeResponseText);
+                let eligibleMedTrades = medTrades.filter(value => {
                     let trueItemId = value["itemId"].split("_")[0];
                     let itemData = globalData[trueItemId];
                     let itemLevel = itemData["level"];
                     let playerLevel = parseInt(userVars["DFSTATS_df_level"])
                     return itemData
                         // do not include meds that give buffs
-                        && !itemData["boostdamagehours"]
-                        && !itemData["boostdamagehours_ex"]
-                        && !itemData["boostexphours"]
-                        && !itemData["boostexphours_ex"]
-                        && !itemData["boostspeedhours"]
-                        && !itemData["boostspeedhours_ex"]
+                        && !itemData["boostdamagehours"] && !itemData["boostdamagehours_ex"]
+                        && !itemData["boostexphours"] && !itemData["boostexphours_ex"]
+                        && !itemData["boostspeedhours"] && !itemData["boostspeedhours_ex"]
                         // do not include low tier meds
                         && !((playerLevel > itemLevel && itemLevel < 50) || (playerLevel > 70 && itemLevel === 50))
                         && !((playerLevel > itemLevel + 10 && itemLevel < 40) || (playerLevel > 70 && itemLevel === 40))
                 });
 
                 let allDocServices = await makeMarketSearchRequest("", "Doctor", "", "services", "buyinglist", filterServiceResponseText);
-                let sampleMedData = globalData[eligibleMedListings[0]["itemId"]];
+                let sampleMedData = globalData[eligibleMedTrades[0]["itemId"]];
                 let medAdministerLevel = sampleMedData["level"] - 5;
                 let docService = allDocServices[medAdministerLevel][0];
                 let healthPercent = userVars["DFSTATS_df_hpcurrent"] / userVars["DFSTATS_df_hpmax"];
-                let optimalMedListings = findCheapestAndOptimalMeds(eligibleMedListings, 100 - healthPercent * 100, docService["price"]);
+                let optimalMedTrades = findCheapestAndOptimalMeds(eligibleMedTrades, 100 - healthPercent * 100, docService["price"]);
 
-                if (optimalMedListings === undefined || optimalMedListings.length == 0) {
+                if (optimalMedTrades === undefined || optimalMedTrades.length == 0) {
                     throw `No med trades available`;
                 }
 
-                let optimalMed = optimalMedListings[0];
+                let optimalMed = optimalMedTrades[0];
                 let itemData = globalData[optimalMed["itemId"]];
                 let totalCost = optimalMed["price"];
 
@@ -328,6 +326,7 @@
                     }
                     unsafeWindow.playSound("heal");
                 }
+
                 unsafeWindow.updateAllFields();
                 unsafeWindow.promptEnd();
                 healServiceButton.disabled = false;
@@ -382,6 +381,7 @@
                     await makeInventoryRequest("0", repairService["userId"], "undefined`undefined", repairService["price"], userVars["DFSTATS_df_armourtype"], "", "34", "0", unsafeWindow.getUpgradePrice(), "buyrepair");
                     unsafeWindow.playSound("repair");
                 }
+
                 unsafeWindow.updateAllFields();
                 unsafeWindow.promptEnd();
                 foodServiceButton.disabled = false;
