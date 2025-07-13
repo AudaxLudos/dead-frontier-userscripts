@@ -63,6 +63,16 @@ function makeMarketSearchRequest(searchName, profession, category, search, searc
     return makeRequest("https://fairview.deadfrontier.com/onlinezombiemmo/trade_search.php", params, null, callback, null);
 }
 
+function makeBankRequest(action, amount, callback = null) {
+    let params = {};
+    params[action] = amount;
+    params['sc'] = userVars["sc"];
+    params['userID'] = userVars["userID"];
+    params['password'] = userVars["password"];
+
+    return makeRequest("https://fairview.deadfrontier.com/onlinezombiemmo/bank.php", params, null, callback, null);
+}
+
 function filterServiceResponseText(response) {
     let services = {};
     let responseLength = [...response.matchAll(new RegExp("tradelist_[0-9]+_id_member=", "g"))].length;
