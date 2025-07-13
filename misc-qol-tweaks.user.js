@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.3
+// @version     1.1.0
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -159,8 +159,45 @@
         });
     }
 
+    function modifyUserInterface() {
+        if (unsafeWindow.jQuery == null) {
+            return;
+        }
+        // Runs only when in inner city page
+        if (window.location.href.indexOf("index.php?page=21") > -1) {
+            // Hide flash/unity web player custom browser link
+            $("body > table:nth-child(1)").hide();
+            // Modify back to outpost button
+            if ($("form[action*='hotrods/hotfunctions.php']").parent()[0] != null) {
+                let mainElem = $("form[action*='hotrods/hotfunctions.php']").parent();
+                mainElem.removeAttr('style');
+                mainElem[0].style.textAlign = "center";
+                $(mainElem[0]).prependTo(mainElem.parent()[0]);
+            }
+            // Hide open chat button
+            $("a[href='https://discordapp.com/invite/deadfrontier2']").parent().hide();
+            // Hide main footer
+            $("body > table:nth-child(2) > tbody > tr > td > table").hide();
+            return;
+        }
+        // Fit everything to current window
+        if ($("td[background*='https://files.deadfrontier.com/deadfrontier/DF3Dimages/mainpage/header.jpg']") != null) {
+            $("td[background*='https://files.deadfrontier.com/deadfrontier/DF3Dimages/mainpage/header.jpg']").css("background-position", "0px -110px");
+            $("td[background*='https://files.deadfrontier.com/deadfrontier/DF3Dimages/mainpage/header.jpg']").parent().height(118);
+            $("td[style*='https://files.deadfrontier.com/deadfrontier/DF3Dimages/mainpage/right_margin.jpg']").css("background-position", "left -110px");
+            $("td[style*='https://files.deadfrontier.com/deadfrontier/DF3Dimages/mainpage/left_margin.jpg']").css("background-position", "right -110px");
+        }
+        // Hide facebook like button
+        $("iframe[src*='https://www.facebook.com/plugins/like.php?href=https://www.facebook.com/OfficialDeadFrontier/&width&layout=button_count&action=like&show_faces=false&share=true&height=35&appId=']").hide();
+        // Hide social links
+        $("body > table:nth-child(2)").hide();
+        // Hide main footer
+        $("body > table:nth-child(3)").hide();
+    }
+
     // Inject script when page fully loads
     setTimeout(() => {
+        modifyUserInterface();
         if (unsafeWindow.inventoryHolder !== undefined) {
             console.log("Audax Scripts: starting misc qol tweaks userscript");
             expandInventoryToSidebar();
