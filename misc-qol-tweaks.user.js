@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.1
+// @version     1.0.3
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -78,7 +78,7 @@
         marketListObserver.observe(target, config);
     }
 
-    function expandInventoryToSidebarHelper() {
+    function expandInventoryToSidebar() {
         function overrideDisplayPlacementMessage(msg, x, y, type) {
             let gameWindow = document.getElementById("gameWindow");
             let oldInventoryHolder = unsafeWindow.inventoryHolder;
@@ -136,13 +136,37 @@
         document.getElementById("sidebar").appendChild(interactionWindow);
     }
 
+    function registerQuickItemSearchListener() {
+        inventoryHolder.addEventListener("dblclick", (event) => {
+            const searchField = document.getElementById("searchField");
+            const searchButton = document.getElementById("makeSearch");
+            const searchCategory = document.getElementById("categoryChoice");
+
+            if (searchField == null || searchButton == null || searchCategory == null) {
+                return;
+            }
+
+            if (event.target.classList.contains("item")) {
+                document.getElementById("cat").innerHTML = "Everything";
+                searchCategory.setAttribute("data-catname", "");
+                searchCategory.setAttribute("data-cattype", "");
+                searchField.value = "";
+                let itemName = globalData[event.target.getAttribute("data-type").replace(/_.*/, "")].name;
+                searchField.value = itemName;
+                searchButton.disabled = false;
+                searchButton.click();
+            }
+        });
+    }
+
     // Inject script when page fully loads
     setTimeout(() => {
         if (unsafeWindow.inventoryHolder !== undefined) {
             console.log("Audax Scripts: starting misc qol tweaks userscript");
-            expandInventoryToSidebarHelper();
+            expandInventoryToSidebar();
             if (window.location.href.indexOf("index.php?page=35") > -1) {
                 registerMarketListingsObserver();
+                registerQuickItemSearchListener();
             }
         }
     }, 1000);
