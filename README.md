@@ -2,6 +2,10 @@
 
 A collection of userscripts for Dead Frontier 3D MMO.
 
+## Notes
+
+- Have only tested this on firefox, unsure if it will completely work for other browsers.
+
 ## Installation
 
 1. Install a userscript manager that is available for your browser. Here are a few options. ([Tampermonkey](https://www.tampermonkey.net/index.php) | [Violentmonkey](http://violentmonkey.com/) | [Greasemonkey](https://www.greasespot.net/))
