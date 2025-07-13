@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.10
+// @version     1.0.11
 // @description Adds buttons for quickly depositing or withdrawing cash
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -29,13 +29,13 @@
         { name: "Withdraw All", action: "withdraw", amount: 9999999999999 },
     ];
 
-    function makeBankRequest(action, amount, callback) {
+    function makeBankRequest(action, amount, hashed, callback) {
         let params = {};
         params[action] = amount;
         params['sc'] = userVars["sc"];
         params['userID'] = userVars["userID"];
         params['password'] = userVars["password"];
-        webCall("bank", params, callback, true);
+        webCall("bank", params, callback, hashed);
     }
 
     function getQuickLinksContainer(mainScreenEdge) {
@@ -66,7 +66,7 @@
         if (currentPage === '15' && urlParams.has('scripts')) {
             const action = urlParams.get('scripts');
             const amount = urlParams.get('amount');
-            makeBankRequest(action, amount, data => {
+            makeBankRequest(action, amount, false, data => {
                 unsafeWindow.updateIntoArr(flshToArr(data, ""), pData);
                 window.location.replace(`${origin}${path}?page=${returnPage}`);
             });
@@ -114,7 +114,7 @@
                     window.location.replace(url);
                     return;
                 }
-                makeBankRequest(action, amount, data => {
+                makeBankRequest(action, amount, false, data => {
                     if (unsafeWindow.pData) {
                         unsafeWindow.updateIntoArr(flshToArr(data, ""), unsafeWindow.pData);
                     } else {
