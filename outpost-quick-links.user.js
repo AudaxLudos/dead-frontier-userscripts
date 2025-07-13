@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.2
+// @version     1.0.3
 // @description Adds buttons for quickly accessing pages
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -12,7 +12,7 @@
 // @downloadURL https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/main/outpost-quick-links.user.js
 // @updateURL   https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/main/outpost-quick-links.user.js
 // @run-at      document-end
-// @require     https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/main/utils.js
+// @require     https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/utils.js
 // ==/UserScript==
 
 (function () {
