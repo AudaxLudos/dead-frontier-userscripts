@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.9
+// @version     1.0.10
 // @description Adds buttons for quickly depositing or withdrawing cash
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -12,7 +12,6 @@
 // @downloadURL https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/quick-bank-actions.user.js
 // @updateURL   https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/quick-bank-actions.user.js
 // @run-at      document-end
-// @require     https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/utils.js
 // ==/UserScript==
 
 (function () {
@@ -30,16 +29,44 @@
         { name: "Withdraw All", action: "withdraw", amount: 9999999999999 },
     ];
 
+    function makeBankRequest(action, amount, callback) {
+        let params = {};
+        params[action] = amount;
+        params['sc'] = userVars["sc"];
+        params['userID'] = userVars["userID"];
+        params['password'] = userVars["password"];
+        webCall("bank", params, callback, true);
+    }
+
+    function getQuickLinksContainer(mainScreenEdge) {
+        let quickLinksContainer = document.getElementById("audaxQuickLinksContainer")
+        if (!quickLinksContainer) {
+            quickLinksContainer = document.createElement("div");
+            quickLinksContainer.id = "audaxQuickLinksContainer";
+            quickLinksContainer.style.position = "absolute";
+            quickLinksContainer.style.top = `${mainScreenEdge.top}px`;
+            quickLinksContainer.style.right = `${mainScreenEdge.left + 50}px`;
+
+            window.addEventListener(
+                "resize",
+                function () {
+                    let mainScreenEdge = $("td[background*='https://files.deadfrontier.com/deadfrontier/DF3Dimages/mainpage/right_edge.jpg']").offset();
+                    quickLinksContainer.style.top = `${mainScreenEdge.top}px`;
+                    quickLinksContainer.style.right = `${mainScreenEdge.left + 50}px`;
+                },
+                true
+            );
+
+            document.body.appendChild(quickLinksContainer);
+        }
+        return quickLinksContainer;
+    }
+
     function startBankActionOutsideInventory() {
         if (currentPage === '15' && urlParams.has('scripts')) {
             const action = urlParams.get('scripts');
             const amount = urlParams.get('amount');
-            let params = {};
-            params[action] = amount;
-            params['sc'] = userVars["sc"];
-            params['userID'] = userVars["userID"];
-            params['password'] = userVars["password"];
-            webCall("bank", params, data => {
+            makeBankRequest(action, amount, data => {
                 unsafeWindow.updateIntoArr(flshToArr(data, ""), pData);
                 window.location.replace(`${origin}${path}?page=${returnPage}`);
             });
@@ -73,7 +100,8 @@
             button.innerHTML = bankActions[i].name;
             container.appendChild(button);
 
-            button.addEventListener("click", async event => {
+            button.addEventListener("click", event => {
+                unsafeWindow.promptLoading("Loading, please wait...");
                 let actionButtons = container.querySelectorAll('button');
                 for (let actionButton of actionButtons) {
                     actionButton.disabled = true;
@@ -86,10 +114,7 @@
                     window.location.replace(url);
                     return;
                 }
-                await makeBankRequest(action, amount, data => {
-                    for (let actionButton of actionButtons) {
-                        actionButton.disabled = false;
-                    }
+                makeBankRequest(action, amount, data => {
                     if (unsafeWindow.pData) {
                         unsafeWindow.updateIntoArr(flshToArr(data, ""), unsafeWindow.pData);
                     } else {
@@ -103,12 +128,16 @@
                         let newHeldCash = cashFields[2].split("=")[1];
                         userVars["DFSTATS_df_cash"] = newHeldCash;
                         userVars["DFSTATS_df_bankcash"] = newBankCash;
-                        unsafeWindow.updateAllFields();
+                        if (currentPage === "35") {
+                            unsafeWindow.search();
+                        } else {
+                            unsafeWindow.updateAllFields();
+                        }
                     }
-                    if (currentPage === "35") {
-                        unsafeWindow.search();
+                    for (let actionButton of actionButtons) {
+                        actionButton.disabled = false;
                     }
-                })
+                });
             });
         }
 
