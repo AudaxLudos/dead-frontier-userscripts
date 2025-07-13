@@ -4,13 +4,13 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.3
+// @version     1.0.4
 // @description Adds buttons to quickly use food, armour and health services
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
 // @supportURL  https://github.com/AudaxLudos/dead-frontier-userscripts/issues
-// @downloadURL https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/main/quick-service-actions.user.js
-// @updateURL   https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/main/quick-service-actions.user.js
+// @downloadURL https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/quick-service-actions.user.js
+// @updateURL   https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/quick-service-actions.user.js
 // @run-at      document-end
 // @require     https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/utils.js
 // ==/UserScript==
