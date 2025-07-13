@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.8
+// @version     1.0.9
 // @description Adds buttons for quickly depositing or withdrawing cash
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -34,7 +34,12 @@
         if (currentPage === '15' && urlParams.has('scripts')) {
             const action = urlParams.get('scripts');
             const amount = urlParams.get('amount');
-            makeBankRequest(action, amount, data => {
+            let params = {};
+            params[action] = amount;
+            params['sc'] = userVars["sc"];
+            params['userID'] = userVars["userID"];
+            params['password'] = userVars["password"];
+            webCall("bank", params, data => {
                 unsafeWindow.updateIntoArr(flshToArr(data, ""), pData);
                 window.location.replace(`${origin}${path}?page=${returnPage}`);
             });
