@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.4
+// @version     1.0.5
 // @description Adds buttons for quickly accessing pages
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -12,7 +12,6 @@
 // @downloadURL https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/outpost-quick-links.user.js
 // @updateURL   https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/outpost-quick-links.user.js
 // @run-at      document-end
-// @require     https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/utils.js
 // ==/UserScript==
 
 (function () {
@@ -37,12 +36,31 @@
         { name: "Records", id: "22" },
     ];
 
-    function addQuickLinkButtons() {
+    function getQuickLinksContainer() {
         if (unsafeWindow.jQuery == null) {
             return;
         }
-        let mainScreenEdge = $("td[background*='https://files.deadfrontier.com/deadfrontier/DF3Dimages/mainpage/right_edge.jpg']").offset();
-        if (!mainScreenEdge) {
+        let leftScreenEdge = $("td[background*='https://files.deadfrontier.com/deadfrontier/DF3Dimages/mainpage/left_edge.jpg']");
+        leftScreenEdge[0].style.position = "relative";
+        leftScreenEdge.closest('table')[0].style.overflow = "visible";
+        leftScreenEdge.closest('table').parent().closest('table')[0].style.overflow = "visible";
+        leftScreenEdge.closest('table').parent().closest('table').parent().closest('table')[0].style.overflow = "visible";
+        let quickLinksContainer = document.getElementById("audaxQuickLinksContainer")
+        if (!quickLinksContainer) {
+            quickLinksContainer = document.createElement("div");
+            quickLinksContainer.id = "audaxQuickLinksContainer";
+            quickLinksContainer.style.position = "absolute";
+            quickLinksContainer.style.top = "10px";
+            quickLinksContainer.style.right = "48px";
+
+            leftScreenEdge[0].appendChild(quickLinksContainer);
+        }
+        return quickLinksContainer;
+    }
+
+    function addQuickLinkButtons() {
+        let quickLinksContainer = getQuickLinksContainer();
+        if (!quickLinksContainer) {
             return;
         }
         let flag1 = userVars && userVars["DFSTATS_df_tradezone"] && (userVars["DFSTATS_df_tradezone"] != 21 && userVars["DFSTATS_df_tradezone"] != 22 && userVars["DFSTATS_df_tradezone"] != 10)
@@ -52,7 +70,6 @@
         if (isInPersonalOutpost) {
             outpostLinks = personalOutpostLinks
         }
-        let quickLinksContainer = getQuickLinksContainer(mainScreenEdge);
         let container = document.createElement("div");
         container.style.width = "120px";
         container.style.display = "grid";

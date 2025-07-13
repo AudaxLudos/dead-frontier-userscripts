@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.11
+// @version     1.0.12
 // @description Adds buttons for quickly depositing or withdrawing cash
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -38,26 +38,24 @@
         webCall("bank", params, callback, hashed);
     }
 
-    function getQuickLinksContainer(mainScreenEdge) {
+    function getQuickLinksContainer() {
+        if (unsafeWindow.jQuery == null) {
+            return;
+        }
+        let leftScreenEdge = $("td[background*='https://files.deadfrontier.com/deadfrontier/DF3Dimages/mainpage/left_edge.jpg']");
+        leftScreenEdge[0].style.position = "relative";
+        leftScreenEdge.closest('table')[0].style.overflow = "visible";
+        leftScreenEdge.closest('table').parent().closest('table')[0].style.overflow = "visible";
+        leftScreenEdge.closest('table').parent().closest('table').parent().closest('table')[0].style.overflow = "visible";
         let quickLinksContainer = document.getElementById("audaxQuickLinksContainer")
         if (!quickLinksContainer) {
             quickLinksContainer = document.createElement("div");
             quickLinksContainer.id = "audaxQuickLinksContainer";
             quickLinksContainer.style.position = "absolute";
-            quickLinksContainer.style.top = `${mainScreenEdge.top}px`;
-            quickLinksContainer.style.right = `${mainScreenEdge.left + 50}px`;
+            quickLinksContainer.style.top = "10px";
+            quickLinksContainer.style.right = "48px";
 
-            window.addEventListener(
-                "resize",
-                function () {
-                    let mainScreenEdge = $("td[background*='https://files.deadfrontier.com/deadfrontier/DF3Dimages/mainpage/right_edge.jpg']").offset();
-                    quickLinksContainer.style.top = `${mainScreenEdge.top}px`;
-                    quickLinksContainer.style.right = `${mainScreenEdge.left + 50}px`;
-                },
-                true
-            );
-
-            document.body.appendChild(quickLinksContainer);
+            leftScreenEdge[0].appendChild(quickLinksContainer);
         }
         return quickLinksContainer;
     }
@@ -75,14 +73,10 @@
     }
 
     function addBankActionButtons() {
-        if (unsafeWindow.jQuery == null) {
+        let quickLinksContainer = getQuickLinksContainer();
+        if (!quickLinksContainer) {
             return;
         }
-        let mainScreenEdge = $("td[background*='https://files.deadfrontier.com/deadfrontier/DF3Dimages/mainpage/right_edge.jpg']").offset();
-        if (!mainScreenEdge) {
-            return;
-        }
-        let quickLinksContainer = getQuickLinksContainer(mainScreenEdge);
         let container = document.createElement("div");
         container.style.width = "120px";
         container.style.display = "grid";
