@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.1
+// @version     1.0.2
 // @description Adds buttons for quickly accessing pages
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -12,6 +12,7 @@
 // @downloadURL https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/main/outpost-quick-links.user.js
 // @updateURL   https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/main/outpost-quick-links.user.js
 // @run-at      document-end
+// @require     https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/main/utils.js
 // ==/UserScript==
 
 (function () {
@@ -82,30 +83,6 @@
         }
 
         quickLinksContainer.prepend(container);
-    }
-
-    function getQuickLinksContainer(mainScreenEdge) {
-        let quickLinksContainer = document.getElementById("audaxQuickLinksContainer")
-        if (!quickLinksContainer) {
-            quickLinksContainer = document.createElement("div");
-            quickLinksContainer.id = "audaxQuickLinksContainer";
-            quickLinksContainer.style.position = "absolute";
-            quickLinksContainer.style.top = `${mainScreenEdge.top}px`;
-            quickLinksContainer.style.right = `${mainScreenEdge.left + 50}px`;
-
-            window.addEventListener(
-                "resize",
-                function () {
-                    let mainScreenEdge = $("td[background*='https://files.deadfrontier.com/deadfrontier/DF3Dimages/mainpage/right_edge.jpg']").offset();
-                    quickLinksContainer.style.top = `${mainScreenEdge.top}px`;
-                    quickLinksContainer.style.right = `${mainScreenEdge.left + 50}px`;
-                },
-                true
-            );
-
-            document.body.appendChild(quickLinksContainer);
-        }
-        return quickLinksContainer;
     }
 
     // Inject script when page fully loads
