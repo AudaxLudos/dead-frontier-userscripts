@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.6
+// @version     1.0.8
 // @description Adds buttons to quickly use food, armour and health services
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -24,7 +24,7 @@
     ///////////////////////
     // Utility functions
     ///////////////////////
-    function openPromptWithButton(message, buttonName, buttonCallback) {
+    function promptWithButton(message, buttonName, buttonCallback) {
         let prompt = document.getElementById("prompt");
         let gameContent = document.getElementById("gamecontent");
 
@@ -42,7 +42,7 @@
         gameContent.append(button);
     }
 
-    function openYesOrNoPrompt(message, yesCallback, noCallback) {
+    function promptYesOrNo(message, yesCallback, noCallback) {
         let prompt = document.getElementById("prompt");
         let gameContent = document.getElementById("gamecontent");
 
@@ -67,9 +67,9 @@
         gameContent.appendChild(noButton);
     }
 
-    function openYesOrNoPromptAsync(message) {
+    function promptYesOrNoAsync(message) {
         return new Promise((resolve, reject) => {
-            openYesOrNoPrompt(
+            promptYesOrNo(
                 message,
                 (event) => {
                     unsafeWindow.promptEnd();
@@ -81,6 +81,21 @@
                 }
             );
         });
+    }
+
+    function enableServiceButtons(enable = true) {
+        let feedServiceButton = document.getElementById("audaxFeedServiceButton");
+        if (feedServiceButton) {
+            feedServiceButton.disabled = !enable;
+        }
+        let healServiceButton = document.getElementById("audaxHealServiceButton");
+        if (healServiceButton) {
+            healServiceButton.disabled = !enable;
+        }
+        let repairServiceButton = document.getElementById("audaxRepairServiceButton");
+        if (repairServiceButton) {
+            repairServiceButton.disabled = !enable;
+        }
     }
 
     function findCheapestAndOptimalFoodTrades(trades, target) {
@@ -109,7 +124,7 @@
             const foodRestoreValue = isFoodCooked ? itemData["foodrestore"] * 3 : itemData["foodrestore"]
             selectedTrades.push(trade);
             backtrack(index + 1, currentRestore + foodRestoreValue, currentCost + trade["price"], selectedTrades);
-            selectedTrades.pop(); // backtrack
+            selectedTrades.pop();
         }
 
         backtrack(0, 0, 0, []);
@@ -170,7 +185,7 @@
         let hungerElement = document.getElementsByClassName("playerNourishment")[0];
         hungerElement.style.top = "";
         let feedServiceButton = document.createElement("button");
-        feedServiceButton.id = "audaxFoodServiceButton";
+        feedServiceButton.id = "audaxFeedServiceButton";
         feedServiceButton.classList.add("opElem");
         feedServiceButton.style.left = "37px";
         feedServiceButton.style.top = "25px";
@@ -180,7 +195,7 @@
         feedServiceButton.addEventListener("click", async event => {
             try {
                 let inventorySlotNumber = unsafeWindow.findLastEmptyGenericSlot("inv");
-                feedServiceButton.disabled = false;
+                enableServiceButtons(false);
                 unsafeWindow.promptLoading("Getting optimal foods and cooking services...");
 
                 if (parseInt(userVars["DFSTATS_df_hungerhp"]) >= 100) {
@@ -220,7 +235,7 @@
                     throw "You do not have enough cash";
                 }
 
-                let confirmed = await openYesOrNoPromptAsync(`Buy and use <span style="color: red;">${isFoodCooked ? "Cooked " : " "}${itemData["name"]}</span> for <span style="color: #FFCC00;">$${nf.format(optimalFood["price"])}</span>?`);
+                let confirmed = await promptYesOrNoAsync(`Buy and use <span style="color: red;">${isFoodCooked ? "Cooked " : " "}${itemData["name"]}</span> for <span style="color: #FFCC00;">$${nf.format(optimalFood["price"])}</span>?`);
                 if (confirmed) {
                     unsafeWindow.promptLoading("Satiating hunger...");
                     // buy food
@@ -233,11 +248,11 @@
 
                 unsafeWindow.updateAllFields();
                 unsafeWindow.promptEnd();
-                feedServiceButton.disabled = false;
+                enableServiceButtons(true);
             } catch (error) {
-                openPromptWithButton(error, "Close", event => {
+                promptWithButton(error, "Close", event => {
                     unsafeWindow.updateAllFields();
-                    feedServiceButton.disabled = false;
+                    enableServiceButtons(true);
                 });
             }
         });
@@ -247,7 +262,7 @@
         let healthElement = document.getElementsByClassName("playerHealth")[0];
         healthElement.style.top = "";
         let healServiceButton = document.createElement("button");
-        healServiceButton.id = "audaxHealthServiceButton";
+        healServiceButton.id = "audaxHealServiceButton";
         healServiceButton.classList.add("opElem");
         healServiceButton.style.left = "43px";
         healServiceButton.style.top = "25px";
@@ -257,7 +272,7 @@
         healServiceButton.addEventListener("click", async event => {
             try {
                 let inventorySlotNumber = unsafeWindow.findLastEmptyGenericSlot("inv");
-                healServiceButton.disabled = true;
+                enableServiceButtons(false);
                 unsafeWindow.promptLoading("Getting optimal meds and healing services...");
 
                 if (parseInt(userVars["DFSTATS_df_hpcurrent"]) >= parseInt(userVars["DFSTATS_df_hpmax"])) {
@@ -312,7 +327,7 @@
                     }
                 }
 
-                let confirmed = await openYesOrNoPromptAsync(`Buy <span style="color: red;">${itemData["name"]}</span> for <span style="color: #FFCC00;">$${nf.format(optimalMed["price"])}</span> and ${optimalMed["useDoctor"] ? `administer it for <span style="color: #FFCC00;">$${nf.format(docService["price"])}</span>. Totaling <span style="color: #FFCC00;">$${nf.format(totalCost)}</span>` : "use it"}?`);
+                let confirmed = await promptYesOrNoAsync(`Buy <span style="color: red;">${itemData["name"]}</span> for <span style="color: #FFCC00;">$${nf.format(optimalMed["price"])}</span> and ${optimalMed["useDoctor"] ? `administer it for <span style="color: #FFCC00;">$${nf.format(docService["price"])}</span>. Totaling <span style="color: #FFCC00;">$${nf.format(totalCost)}</span>` : "use it"}?`);
                 if (confirmed) {
                     unsafeWindow.promptLoading("Replenishing health...");
                     // buy med
@@ -329,11 +344,11 @@
 
                 unsafeWindow.updateAllFields();
                 unsafeWindow.promptEnd();
-                healServiceButton.disabled = false;
+                enableServiceButtons(true);
             } catch (error) {
-                openPromptWithButton(error, "Close", event => {
+                promptWithButton(error, "Close", event => {
                     unsafeWindow.updateAllFields();
-                    healServiceButton.disabled = false;
+                    enableServiceButtons(true);
                 });
             }
         });
@@ -354,7 +369,7 @@
 
         repairServiceButton.addEventListener("click", async event => {
             try {
-                repairServiceButton.disabled = false;
+                enableServiceButtons(false);
                 unsafeWindow.promptLoading("Getting optimal repairing services...");
 
                 if (parseInt(userVars["DFSTATS_df_armourhp"]) >= parseInt(userVars["DFSTATS_df_armourhpmax"])) {
@@ -375,7 +390,7 @@
                     throw "You do not have enough cash";
                 }
 
-                let confirmed = await openYesOrNoPromptAsync(`Repair your <span style="color: red;">${userVars["DFSTATS_df_armourname"]}</span> for <span style="color: #FFCC00;">$${nf.format(repairService["price"])}</span>?`);
+                let confirmed = await promptYesOrNoAsync(`Repair your <span style="color: red;">${userVars["DFSTATS_df_armourname"]}</span> for <span style="color: #FFCC00;">$${nf.format(repairService["price"])}</span>?`);
                 if (confirmed) {
                     unsafeWindow.promptLoading("Repairing armour...");
                     await makeInventoryRequest("0", repairService["userId"], "undefined`undefined", repairService["price"], userVars["DFSTATS_df_armourtype"], "", "34", "0", unsafeWindow.getUpgradePrice(), "buyrepair");
@@ -384,11 +399,11 @@
 
                 unsafeWindow.updateAllFields();
                 unsafeWindow.promptEnd();
-                foodServiceButton.disabled = false;
+                enableServiceButtons(true);
             } catch (error) {
-                openPromptWithButton(error, "Close", event => {
+                promptWithButton(error, "Close", event => {
                     unsafeWindow.updateAllFields();
-                    repairServiceButton.disabled = false;
+                    enableServiceButtons(true);
                 });
             }
         });
