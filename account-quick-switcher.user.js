@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.4
+// @version     1.0.5
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @grant        GM.getValue
@@ -144,6 +144,26 @@
         GM.setValue("lastActiveUserID", lastActiveUserID);
     }
 
+    promptYesOrNoAsync = function (message) {
+        return new Promise((resolve, reject) => {
+            promptYesOrNo(
+                message,
+                (event) => {
+                    unsafeWindow.promptEnd();
+                    resolve(true)
+                },
+                (event) => {
+                    unsafeWindow.promptEnd();
+                    resolve(false)
+                }
+            );
+            let promptContainer = document.getElementById("audaxPromptContainer");
+            if (promptContainer) {
+                promptContainer.style.visibility = "visible";
+            }
+        });
+    }
+
     //Add character quick switcher button if at home. Credit to Rebekah/Tectonic Stupidity for the UI design.
     function addAccountQuickSwitcherButton() {
         let rightQuickLinksContainer = getRightQuickLinksContainer();
@@ -188,14 +208,18 @@
                 if (confirmed) {
                     changeCharacter(accountCookies[i]["cookie"]);
                 }
+                let promptContainer = document.getElementById("audaxPromptContainer");
+                promptContainer.style.visibility = "hidden";
             });
             removeButton.addEventListener("click", async event => {
-                let confirmed = await promptYesOrNoAsync(`Remove <span style="color: red;">${accountCookies[i]["characterName"]} account</span>?`);
+                let confirmed = await promptYesOrNoAsync(`Remove <span style="color: red;">${accountCookies[i]["characterName"]}</span> account?`);
                 if (confirmed) {
                     removeCharacterFromCharacterCookieData(i);
                     document.getElementById("audaxAccountQuickSwitcher").remove();
                     addAccountQuickSwitcherButton();
                 }
+                let promptContainer = document.getElementById("audaxPromptContainer");
+                promptContainer.style.visibility = "hidden";
             });
 
             buttonContainer.append(accountButton);
