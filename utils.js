@@ -157,3 +157,63 @@ function getQuickLinksContainer(mainScreenEdge) {
     }
     return quickLinksContainer;
 }
+
+function promptWithButton(message, buttonName, buttonCallback) {
+    let prompt = document.getElementById("prompt");
+    let gameContent = document.getElementById("gamecontent");
+
+    prompt.style.display = "block";
+    gameContent.classList.remove("warning");
+    gameContent.innerHTML = `<div style="text-align: center;">${message}</div>`;
+
+    let button = document.createElement("button");
+    button.textContent = buttonName;
+    button.style.position = "absolute";
+    button.style.left = "111px";
+    button.style.bottom = "8px";
+    button.addEventListener("click", buttonCallback);
+
+    gameContent.append(button);
+}
+
+function promptYesOrNo(message, yesCallback, noCallback) {
+    let prompt = document.getElementById("prompt");
+    let gameContent = document.getElementById("gamecontent");
+
+    prompt.style.display = "block";
+    gameContent.classList.add("warning");
+    gameContent.innerHTML = message;
+
+    let yesButton = document.createElement("button");
+    yesButton.style.position = "absolute";
+    yesButton.style.left = "86px";
+    yesButton.style.bottom = "8px";
+    yesButton.innerHTML = "Yes";
+    yesButton.addEventListener("click", yesCallback);
+    gameContent.appendChild(yesButton);
+
+    let noButton = document.createElement("button");
+    noButton.style.position = "absolute";
+    noButton.style.right = "86px";
+    noButton.style.bottom = "8px";
+    noButton.innerHTML = "No";
+    noButton.addEventListener("click", noCallback);
+    gameContent.appendChild(noButton);
+}
+
+function promptYesOrNoAsync(message) {
+    return new Promise((resolve, reject) => {
+        promptYesOrNo(
+            message,
+            (event) => {
+                unsafeWindow.promptEnd();
+                resolve(true)
+            },
+            (event) => {
+                unsafeWindow.promptEnd();
+                resolve(false)
+            }
+        );
+    });
+}
+
