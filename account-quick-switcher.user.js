@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.2
+// @version     1.0.3
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @grant        GM.getValue
@@ -16,7 +16,7 @@
 // @downloadURL https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/account-quick-switcher.user.js
 // @updateURL   https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/account-quick-switcher.user.js
 // @run-at      document-end
-// @require     https://cdn.jsdelivr.net/gh/AudaxLudos/dead-frontier-userscripts@7.0.2/utils.js
+// @require     https://cdn.jsdelivr.net/gh/AudaxLudos/dead-frontier-userscripts@7.0.3/utils.js
 // ==/UserScript==
 
 (function () {
