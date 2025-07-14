@@ -12,7 +12,7 @@
 // @downloadURL https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/auto-yard-scrap.user.js
 // @updateURL   https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/auto-yard-scrap.user.js
 // @run-at      document-end
-// @require     https://cdn.jsdelivr.net/gh/AudaxLudos/dead-frontier-userscripts/utils.js
+// @require     https://cdn.jsdelivr.net/gh/AudaxLudos/dead-frontier-userscripts@7.0.1/utils.js
 // ==/UserScript==
 
 (function () {

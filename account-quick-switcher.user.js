@@ -16,7 +16,7 @@
 // @downloadURL https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/account-quick-switcher.user.js
 // @updateURL   https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/account-quick-switcher.user.js
 // @run-at      document-end
-// @require     https://cdn.jsdelivr.net/gh/AudaxLudos/dead-frontier-userscripts@1.0.1/utils.js
+// @require     https://cdn.jsdelivr.net/gh/AudaxLudos/dead-frontier-userscripts@7.0.1/utils.js
 // ==/UserScript==
 
 (function () {
