@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.10
+// @version     1.0.11
 // @description Adds buttons to quickly fill hunger, repair armour and heal health
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -12,7 +12,7 @@
 // @downloadURL https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/quick-service-actions.user.js
 // @updateURL   https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/quick-service-actions.user.js
 // @run-at      document-end
-// @require     https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/utils.js
+// @require     https://cdn.jsdelivr.net/gh/AudaxLudos/dead-frontier-userscripts/utils.js
 // ==/UserScript==
 
 (function () {

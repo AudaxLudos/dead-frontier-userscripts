@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.0
+// @version     1.0.1
 // @description Adds buttons to quickly fill hunger, repair armour and heal health
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -12,7 +12,7 @@
 // @downloadURL https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/auto-yard-scrap.user.js
 // @updateURL   https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/auto-yard-scrap.user.js
 // @run-at      document-end
-// @require     https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/utils.js
+// @require     https://cdn.jsdelivr.net/gh/AudaxLudos/dead-frontier-userscripts/utils.js
 // ==/UserScript==
 
 (function () {
@@ -65,7 +65,7 @@
                 let validItems = getInventorySlotsWithItem();
                 let totalCost = 0;
 
-                if (!validItems) {
+                if (!Array.isArray(validItems) || !validItems.length) {
                     throw "No items to scrap found";
                 }
 
@@ -88,7 +88,7 @@
                 unsafeWindow.updateAllFields();
                 scrapAllButton.disabled = false;
             } catch (error) {
-                promptWithButton("error", "Close", event => {
+                promptWithButton(error, "Close", event => {
                     unsafeWindow.updateAllFields();
                     scrapAllButton.disabled = false;
                 })
