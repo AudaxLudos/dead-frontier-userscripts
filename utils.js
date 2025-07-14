@@ -177,6 +177,7 @@ function getPromptElement() {
     promptContainer.style.left = "0px";
     promptContainer.style.right = "0px";
     promptContainer.style.backdropFilter = "blur(3px)"
+    promptContainer.style.zIndex = "100";
     prompt = document.createElement("div");
     prompt.id = "prompt";
     let gameContent = document.createElement("div");
