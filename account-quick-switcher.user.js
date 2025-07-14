@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.5
+// @version     1.0.6
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @grant        GM.getValue
@@ -232,10 +232,12 @@
 
     // Inject script when page fully loads
     window.addEventListener("load", async event => {
-        console.log("Audax Scripts: starting account quick switcher userscript")
-        await sleep(500);
-        initUserData();
-        await loadStoredCharacterCookieData();
-        addAccountQuickSwitcherButton();
+        if (window.location.href.indexOf("index.php?page=21") == -1) {
+            console.log("Audax Scripts: starting account quick switcher userscript")
+            await sleep(500);
+            initUserData();
+            await loadStoredCharacterCookieData();
+            addAccountQuickSwitcherButton();
+        }
     });
 })();
