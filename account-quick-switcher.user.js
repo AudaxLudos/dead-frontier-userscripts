@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.6
+// @version     1.0.7
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @grant        GM.getValue
@@ -209,7 +209,9 @@
                     changeCharacter(accountCookies[i]["cookie"]);
                 }
                 let promptContainer = document.getElementById("audaxPromptContainer");
-                promptContainer.style.visibility = "hidden";
+                if (promptContainer) {
+                    promptContainer.style.visibility = "hidden";
+                }
             });
             removeButton.addEventListener("click", async event => {
                 let confirmed = await promptYesOrNoAsync(`Remove <span style="color: red;">${accountCookies[i]["characterName"]}</span> account?`);
@@ -219,7 +221,9 @@
                     addAccountQuickSwitcherButton();
                 }
                 let promptContainer = document.getElementById("audaxPromptContainer");
-                promptContainer.style.visibility = "hidden";
+                if (promptContainer) {
+                    promptContainer.style.visibility = "hidden";
+                }
             });
 
             buttonContainer.append(accountButton);
