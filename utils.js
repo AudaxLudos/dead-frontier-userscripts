@@ -171,6 +171,7 @@ function getPromptElement() {
         .parent().next().find('table > tbody > tr')[0].children[1];
     mainWindowElement.style.position = "relative";
     let promptContainer = document.createElement("div");
+    promptContainer.id = "audaxPromptContainer";
     promptContainer.style.position = "absolute";
     promptContainer.style.top = "0px";
     promptContainer.style.bottom = "0px";
