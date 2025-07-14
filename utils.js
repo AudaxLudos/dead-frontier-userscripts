@@ -178,6 +178,8 @@ function getPromptElement() {
     promptContainer.style.left = "0px";
     promptContainer.style.right = "0px";
     promptContainer.style.zIndex = "100";
+    promptContainer.style.fontFamily = '"Courier New", "Arial"';
+    promptContainer.style.fontWeight = "600";
     prompt = document.createElement("div");
     prompt.id = "prompt";
     let gameContent = document.createElement("div");

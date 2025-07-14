@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.1
+// @version     1.0.2
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @grant        GM.getValue
@@ -88,7 +88,7 @@
                 document.cookie = name + '=; Path=/onlinezombiemmo;Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
             }
         }
-        //Clear the actual login cookie and the lastuser
+        //Clear the actual login cookie and the last user
         document.cookie = 'DeadFrontierFairview=; Path=/;Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
         document.cookie = 'lastLoginUser=; Path=/onlinezombiemmo;Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     }
@@ -169,7 +169,6 @@
             let button = document.createElement("button");
             button.dataset.userId = accountCookies[i]["userID"];
             button.innerHTML = accountCookies[i]["characterName"];
-            button.innerHTML += "<span>X</span>";
 
             button.addEventListener("click", async event => {
                 let confirmed = await promptYesOrNoAsync(`Switch current account to <span style="color: red;">${accountCookies[i]["characterName"]}</span>?`);
