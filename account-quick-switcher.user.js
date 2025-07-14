@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.0
+// @version     1.0.1
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @grant        GM.getValue
@@ -157,11 +157,19 @@
         container.style.border = "1px solid #990000";
         container.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
         container.style.textAlign = "center";
-
+        let title = document.createElement("div");
+        title.textContent = "Account Switcher";
+        title.style.textAlign = "center";
+        title.style.color = "#ff0000";
+        title.style.fontWeight = "bold";
+        title.style.fontFamily = "arial";
+        title.style.fontSize = "13px";
+        container.append(title);
         for (let i in accountCookies) {
             let button = document.createElement("button");
             button.dataset.userId = accountCookies[i]["userID"];
             button.innerHTML = accountCookies[i]["characterName"];
+            button.innerHTML += "<span>X</span>";
 
             button.addEventListener("click", async event => {
                 let confirmed = await promptYesOrNoAsync(`Switch current account to <span style="color: red;">${accountCookies[i]["characterName"]}</span>?`);

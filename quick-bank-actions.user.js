@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.13
+// @version     1.0.14
 // @description Adds buttons for quickly depositing or withdrawing cash
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -85,6 +85,14 @@
         container.style.border = "1px solid #990000";
         container.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
         container.style.marginBottom = "20px";
+        let title = document.createElement("div");
+        title.textContent = "Quick Bank";
+        title.style.textAlign = "center";
+        title.style.color = "#ff0000";
+        title.style.fontWeight = "bold";
+        title.style.fontFamily = "arial";
+        title.style.fontSize = "13px";
+        container.append(title);
         for (let i in bankActions) {
             let action = bankActions[i].action;
             let amount = bankActions[i].amount

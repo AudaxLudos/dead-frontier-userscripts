@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.6
+// @version     1.0.7
 // @description Adds buttons for quickly accessing pages
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -79,6 +79,14 @@
         container.style.border = "1px solid #990000";
         container.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
         container.style.textAlign = "center";
+        let title = document.createElement("div");
+        title.textContent = "Quick Links";
+        title.style.textAlign = "center";
+        title.style.color = "#ff0000";
+        title.style.fontWeight = "bold";
+        title.style.fontFamily = "arial";
+        title.style.fontSize = "13px";
+        container.append(title);
         for (let i in outpostLinks) {
             let link = document.createElement("a");
             link.style.color = "#D0D0D0";
