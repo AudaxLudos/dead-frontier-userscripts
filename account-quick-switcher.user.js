@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.3
+// @version     1.0.4
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @grant        GM.getValue
@@ -166,19 +166,41 @@
         title.style.fontSize = "13px";
         container.append(title);
         for (let i in accountCookies) {
-            let button = document.createElement("button");
-            button.dataset.userId = accountCookies[i]["userID"];
-            button.innerHTML = accountCookies[i]["characterName"];
+            let buttonContainer = document.createElement("div");
+            buttonContainer.style.display = "flex";
+            buttonContainer.style.justifyContent = "space-between";
+            buttonContainer.style.flexFlow = "row nowrap";
+            buttonContainer.style.overflow = "auto";
+            let accountButton = document.createElement("button");
+            accountButton.style.width = "70%";
+            accountButton.style.textAlign = "center";
+            accountButton.style.overflow = "hidden"
+            accountButton.style.whiteSpace = "nowrap";
+            accountButton.style.textOverflow = "ellipsis";
+            accountButton.dataset.userId = accountCookies[i]["userID"];
+            accountButton.innerHTML = accountCookies[i]["characterName"];
+            let removeButton = document.createElement("button");
+            removeButton.style.width = "30%";
+            removeButton.innerHTML = "x"
 
-            button.addEventListener("click", async event => {
+            accountButton.addEventListener("click", async event => {
                 let confirmed = await promptYesOrNoAsync(`Switch current account to <span style="color: red;">${accountCookies[i]["characterName"]}</span>?`);
                 if (confirmed) {
                     changeCharacter(accountCookies[i]["cookie"]);
                 }
-                let promptContainer = document.getElementById("audaxPromptContainer");
-                promptContainer.style = "";
             });
-            container.append(button);
+            removeButton.addEventListener("click", async event => {
+                let confirmed = await promptYesOrNoAsync(`Remove <span style="color: red;">${accountCookies[i]["characterName"]} account</span>?`);
+                if (confirmed) {
+                    removeCharacterFromCharacterCookieData(i);
+                    document.getElementById("audaxAccountQuickSwitcher").remove();
+                    addAccountQuickSwitcherButton();
+                }
+            });
+
+            buttonContainer.append(accountButton);
+            buttonContainer.append(removeButton);
+            container.append(buttonContainer);
         }
 
         rightQuickLinksContainer.append(container);
