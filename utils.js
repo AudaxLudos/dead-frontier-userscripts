@@ -1,3 +1,4 @@
+
 async function makeRequest(requestUrl, requestParams, controller, callback, callbackParams) {
     let params = unsafeWindow.objectJoin(requestParams);
     let dataHash = unsafeWindow.hash(params);
@@ -158,8 +159,37 @@ function getQuickLinksContainer(mainScreenEdge) {
     return quickLinksContainer;
 }
 
-function promptWithButton(message, buttonName, buttonCallback) {
+function getPromptElement() {
+    if (!unsafeWindow.jQuery) {
+        return;
+    }
     let prompt = document.getElementById("prompt");
+    if (prompt) {
+        return prompt;
+    }
+    let mainWindowElement = $('td[background*="https://files.deadfrontier.com/deadfrontier/DF3Dimages/mainpage/menu_bottom.jpg"]')
+        .parent().next().find('table > tbody > tr')[0].children[1];
+    mainWindowElement.style.position = "relative";
+    let promptContainer = document.createElement("div");
+    promptContainer.style.position = "absolute";
+    promptContainer.style.top = "0px";
+    promptContainer.style.bottom = "0px";
+    promptContainer.style.left = "0px";
+    promptContainer.style.right = "0px";
+    promptContainer.style.backdropFilter = "blur(3px)"
+    prompt = document.createElement("div");
+    prompt.id = "prompt";
+    let gameContent = document.createElement("div");
+    gameContent.id = "gamecontent";
+    unsafeWindow.df_prompt = gameContent;
+    prompt.append(gameContent);
+    promptContainer.append(prompt);
+    mainWindowElement.append(promptContainer);
+    return prompt;
+}
+
+function promptWithButton(message, buttonName, buttonCallback) {
+    let prompt = getPromptElement();
     let gameContent = document.getElementById("gamecontent");
 
     prompt.style.display = "block";
@@ -177,7 +207,7 @@ function promptWithButton(message, buttonName, buttonCallback) {
 }
 
 function promptYesOrNo(message, yesCallback, noCallback) {
-    let prompt = document.getElementById("prompt");
+    let prompt = getPromptElement()
     let gameContent = document.getElementById("gamecontent");
 
     prompt.style.display = "block";
