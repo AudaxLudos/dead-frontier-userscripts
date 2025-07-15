@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.7
+// @version     1.0.8
 // @description Adds buttons for quickly accessing pages
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -111,12 +111,10 @@
     }
 
     // Inject script when page fully loads
-    window.addEventListener("load", event => {
-        setTimeout(() => {
-            if (window.location.href.indexOf("index.php?page=21") == -1) {
-                console.log("Audax Scripts: starting outpost quick links userscript");
-                addQuickLinkButtons();
-            }
-        }, 500);
-    });
+    setTimeout(() => {
+        if (window.location.href.indexOf("index.php?page=21") == -1) {
+            console.log("Audax Scripts: starting outpost quick links userscript");
+            addQuickLinkButtons();
+        }
+    }, 500);
 })();

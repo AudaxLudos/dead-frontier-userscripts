@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.1.3
+// @version     1.1.4
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -206,5 +206,5 @@
                 registerQuickItemSearchListener();
             }
         }
-    }, 1000);
+    }, 500);
 })();

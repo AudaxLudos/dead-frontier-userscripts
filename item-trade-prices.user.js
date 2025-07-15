@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.13
+// @version     1.0.14
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -163,14 +163,12 @@
     }
 
     // Inject script when page fully loads
-    window.addEventListener("load", event => {
-        setTimeout(() => {
-            if (unsafeWindow.inventoryHolder) {
-                console.log("Audax Scripts: starting item trade price display userscript");
-                loadItemsTradeData();
-                registerItemSlotListener();
-                registerInfoBoxObserver();
-            }
-        }, 500);
-    });
+    setTimeout(() => {
+        if (unsafeWindow.inventoryHolder) {
+            console.log("Audax Scripts: starting item trade price display userscript");
+            loadItemsTradeData();
+            registerItemSlotListener();
+            registerInfoBoxObserver();
+        }
+    }, 500);
 })();
