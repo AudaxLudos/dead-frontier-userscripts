@@ -4,13 +4,13 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.7
+// @version     1.0.9
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
-// @grant        GM.getValue
-// @grant        GM.setValue
-// @grant        GM_xmlhttpRequest
-// @grant        GM_openInTab
+// @grant       GM.getValue
+// @grant       GM.setValue
+// @grant       GM_xmlhttpRequest
+// @grant       GM_openInTab
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
 // @supportURL  https://github.com/AudaxLudos/dead-frontier-userscripts/issues
 // @downloadURL https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/account-quick-switcher.user.js
@@ -27,6 +27,14 @@
 
     function sleep(ms) {
         return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    function initUserData() {
+        if (!unsafeWindow.userVars) {
+            return;
+        }
+        lastActiveUserID = unsafeWindow.userVars['userID'];
+        GM.setValue("lastActiveUserID", lastActiveUserID);
     }
 
     async function loadStoredCharacterCookieData() {
@@ -50,11 +58,16 @@
             characterName = document.getElementById("sidebar").children[2].firstChild.textContent;
         }
         accountCookies[unsafeWindow.userVars['userID']] = {
-            "characterName": characterName, "cookie": document.cookie,
+            "characterName": characterName,
+            "cookie": document.cookie,
             "userID": unsafeWindow.userVars['userID']
         };
         //Save updated cookie data
         GM.setValue("characterCookieData", JSON.stringify(accountCookies));
+    }
+
+    async function loadLastActiveUserID() {
+        lastActiveUserID = await GM.getValue("lastActiveUserID", null);
     }
 
     function removeCharacterFromCharacterCookieData(userID) {
@@ -136,14 +149,6 @@
         return quickLinksContainer;
     }
 
-    function initUserData() {
-        if (!unsafeWindow.userVars) {
-            return;
-        }
-        lastActiveUserID = unsafeWindow.userVars['userID'];
-        GM.setValue("lastActiveUserID", lastActiveUserID);
-    }
-
     promptYesOrNoAsync = function (message) {
         return new Promise((resolve, reject) => {
             promptYesOrNo(
@@ -202,7 +207,10 @@
             let removeButton = document.createElement("button");
             removeButton.style.width = "30%";
             removeButton.innerHTML = "x"
-
+            
+            if (lastActiveUserID && i === lastActiveUserID) {
+                accountButton.disabled = true;
+            }
             accountButton.addEventListener("click", async event => {
                 let confirmed = await promptYesOrNoAsync(`Switch current account to <span style="color: red;">${accountCookies[i]["characterName"]}</span>?`);
                 if (confirmed) {
@@ -241,6 +249,7 @@
             await sleep(500);
             initUserData();
             await loadStoredCharacterCookieData();
+            await loadLastActiveUserID();
             addAccountQuickSwitcherButton();
         }
     });
