@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.10
+// @version     1.0.11
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @grant       GM.getValue
@@ -39,13 +39,14 @@
 
     async function loadStoredCharacterCookieData() {
         //Load stored cookie data
-        accountCookies = JSON.parse(await GM.getValue("characterCookieData", JSON.stringify(accountCookies)));
+        accountCookies = JSON.parse(await GM.getValue("accountCookies", JSON.stringify(accountCookies)));
         //Fix character cookie if loading from previous versions
         for (let userID in accountCookies) {
             if (accountCookies[userID]['userID'] == undefined) {
                 accountCookies[userID]['userID'] = userID;
             }
         }
+        console.log(accountCookies);
         //Stop here if outside the home page due to the fact that userVars may not be available
         if (!unsafeWindow.userVars) {
             return;
@@ -62,28 +63,20 @@
             "cookie": document.cookie,
             "userID": unsafeWindow.userVars['userID']
         };
+        console.log(accountCookies);
         //Save updated cookie data
-        GM.setValue("characterCookieData", JSON.stringify(accountCookies));
+        GM.setValue("accountCookies", JSON.stringify(accountCookies));
     }
 
     async function loadLastActiveUserID() {
         lastActiveUserID = await GM.getValue("lastActiveUserID", null);
     }
 
-    function removeCharacterFromCharacterCookieData(userID) {
+    function removeAccountCookie(userID) {
         if (accountCookies[userID] != undefined) {
             delete accountCookies[userID];
             //Save updated cookie data
-            GM.setValue("characterCookieData", JSON.stringify(accountCookies));
-        }
-    }
-
-    function changeCharacterCookieDataName(userID) {
-        if (accountCookies[userID] != undefined) {
-            let newCharName = window.prompt("Input the new name for the saved character");
-            accountCookies[userID]["characterName"] = newCharName.slice(0, 16);
-            //Save updated cookie data
-            GM.setValue("characterCookieData", JSON.stringify(accountCookies));
+            GM.setValue("accountCookies", JSON.stringify(accountCookies));
         }
     }
 
@@ -190,47 +183,67 @@
         title.style.fontFamily = "arial";
         title.style.fontSize = "13px";
         container.append(title);
-        for (let i in accountCookies) {
+        for (let userId in accountCookies) {
             let buttonContainer = document.createElement("div");
             buttonContainer.style.display = "flex";
             buttonContainer.style.justifyContent = "space-between";
             buttonContainer.style.flexFlow = "row nowrap";
             buttonContainer.style.overflow = "auto";
+
             let accountButton = document.createElement("button");
             accountButton.style.width = "70%";
             accountButton.style.textAlign = "center";
             accountButton.style.overflow = "hidden"
             accountButton.style.whiteSpace = "nowrap";
             accountButton.style.textOverflow = "ellipsis";
-            accountButton.dataset.userId = accountCookies[i]["userID"];
-            accountButton.innerHTML = accountCookies[i]["characterName"];
+            accountButton.dataset.userId = accountCookies[userId]["userID"];
+            accountButton.innerHTML = accountCookies[userId]["characterName"];
+
             let removeButton = document.createElement("button");
             removeButton.style.width = "30%";
             removeButton.innerHTML = "x"
 
-            if (lastActiveUserID && i === lastActiveUserID) {
+            if (lastActiveUserID && userId === lastActiveUserID) {
                 accountButton.disabled = true;
             }
+
             accountButton.addEventListener("click", async event => {
-                let confirmed = await promptYesOrNoAsync(`Switch current account to <span style="color: red;">${accountCookies[i]["characterName"]}</span>?`);
+                const buttons = container.querySelectorAll("button");
+                for (const element of buttons) {
+                    element.disabled = true;
+                }
+                let confirmed = await promptYesOrNoAsync(`Switch current account to <span style="color: red;">${accountCookies[userId]["characterName"]}</span>?`);
                 if (confirmed) {
-                    changeCharacter(accountCookies[i]["cookie"]);
+                    changeCharacter(accountCookies[userId]["cookie"]);
                 }
                 let promptContainer = document.getElementById("audaxPromptContainer");
                 if (promptContainer) {
                     promptContainer.style.visibility = "hidden";
                 }
+                for (const element of buttons) {
+                    if (element.dataset.userId === userId || element.dataset.userId === undefined) {
+                        element.disabled = false;
+                    }
+                }
             });
+
             removeButton.addEventListener("click", async event => {
-                let confirmed = await promptYesOrNoAsync(`Remove <span style="color: red;">${accountCookies[i]["characterName"]}</span> account?`);
+                const buttons = container.querySelectorAll("button");
+                for (const element of buttons) {
+                    element.disabled = true;
+                }
+                let confirmed = await promptYesOrNoAsync(`Remove <span style="color: red;">${accountCookies[userId]["characterName"]}</span> account?`);
                 if (confirmed) {
-                    removeCharacterFromCharacterCookieData(i);
+                    removeAccountCookie(userId);
                     document.getElementById("audaxAccountQuickSwitcher").remove();
                     addAccountQuickSwitcherButton();
                 }
                 let promptContainer = document.getElementById("audaxPromptContainer");
                 if (promptContainer) {
                     promptContainer.style.visibility = "hidden";
+                }
+                for (const element of buttons) {
+                    element.disabled = false;
                 }
             });
 
