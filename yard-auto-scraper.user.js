@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.4
+// @version     1.0.6
 // @description Adds buttons to quickly fill hunger, repair armour and heal health
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -61,7 +61,6 @@
         scrapAllButton.addEventListener("click", async event => {
             try {
                 scrapAllButton.disabled = true;
-                const controller = new AbortController();
                 let validItems = getInventorySlotsWithItem();
                 let totalCost = 0;
 
@@ -73,26 +72,72 @@
 
                 let confirmed = await promptYesOrNoAsync(`Are you sure you want to scrap your <span style="color: red;">Inventory</span> for <span style="color: #FFCC00;">$${unsafeWindow.nf.format(totalCost)}</span>?`)
                 if (confirmed) {
-                    if (validItems.length > 0) promptWithButton("Scrapping inventory...", "Cancel", (e) => controller.abort());
+                    const controller = new AbortController();
+                    if (validItems.length > 0) {
+                        promptWithButton("Scrapping inventory...", "Cancel", (e) => controller.abort());
+                    }
 
                     for (const [index, value] of validItems.entries()) {
-                        await sleep((Math.random() * 30) + 300);
-                        await makeInventoryRequest("0", "0", "", "", value.id, "", value.slot, "", value.scrapValue, "scrap", controller);
-                        unsafeWindow.playSound("shop_buysell");
+                        await sleep(Math.random() * 60);
+                        await makeInventoryRequestV2("0", "0", "", "", value.id, "", value.slot, "", value.scrapValue, "scrap", controller);
                         if (index === validItems.length - 1) {
-                            unsafeWindow.updateAllFields();
-                            throw "Inventory is empty";
+                            break;
                         }
                     }
                 }
                 unsafeWindow.updateAllFields();
                 scrapAllButton.disabled = false;
             } catch (error) {
-                promptWithButton(error, "Close", event => {
-                    unsafeWindow.updateAllFields();
-                    scrapAllButton.disabled = false;
-                })
+                if (error !== "NoErrorPrompt") {
+                    promptWithButton(error, "Close", event => {
+                        unsafeWindow.updateAllFields();
+                        scrapAllButton.disabled = false;
+                    });
+                }
+                unsafeWindow.updateAllFields();
+                scrapAllButton.disabled = false;
             }
+        });
+    }
+
+    function makeInventoryRequestV2(creditsNum, buyNum, renameTo, itemPrice, itemType1, itemType2, slot1, slot2, itemScrapValue, action, controller) {
+        return new Promise((resolve, reject) => {
+            const onAbort = (e) => {
+                reject("NoErrorPrompt");
+            };
+
+            if (controller) {
+                controller.signal.addEventListener("abort", onAbort, { once: true });
+            }
+
+            let params = {};
+            params["pagetime"] = userVars["pagetime"];
+            params["templateID"] = "0";
+            params["sc"] = userVars["sc"];
+            params["creditsnum"] = creditsNum;
+            params["buynum"] = buyNum;
+            params["renameto"] = renameTo;
+            params["expected_itemprice"] = itemPrice;
+            params["expected_itemtype2"] = itemType2;
+            params["expected_itemtype"] = itemType1;
+            params["itemnum2"] = slot2;
+            params["itemnum"] = slot1;
+            params["price"] = itemScrapValue;
+            params["action"] = action;
+            params["gv"] = "21";
+            params["userID"] = userVars["userID"];
+            params["password"] = userVars["password"];
+
+            webCall("inventory_new", params, (data) => {
+                resolve(true);
+                controller.signal.removeEventListener("abort", onAbort);
+                unsafeWindow.playSound("shop_buysell");
+                unsafeWindow.updateIntoArr(flshToArr(data, "DFSTATS_"), userVars);
+                unsafeWindow.populateInventory();
+                unsafeWindow.populateCharacterInventory();
+                unsafeWindow.renderAvatarUpdate();
+                unsafeWindow.updateAllFieldsBase();
+            }, true);
         });
     }
 
