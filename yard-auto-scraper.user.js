@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.6
+// @version     1.0.7
 // @description Adds buttons to quickly fill hunger, repair armour and heal health
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -127,11 +127,10 @@
             params["gv"] = "21";
             params["userID"] = userVars["userID"];
             params["password"] = userVars["password"];
-
+            unsafeWindow.playSound("shop_buysell");
             webCall("inventory_new", params, (data) => {
                 resolve(true);
                 controller.signal.removeEventListener("abort", onAbort);
-                unsafeWindow.playSound("shop_buysell");
                 unsafeWindow.updateIntoArr(flshToArr(data, "DFSTATS_"), userVars);
                 unsafeWindow.populateInventory();
                 unsafeWindow.populateCharacterInventory();
@@ -146,6 +145,7 @@
         if (window.location.href.indexOf("index.php?page=24") > -1 && unsafeWindow.inventoryHolder != null) {
             console.log("Audax Scripts: starting yard auto scraper userscript");
             addAutoScrapInventoryButton();
+            addStorageToInventoryButton()
         }
     }, 500);
 })();
