@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.11
+// @version     1.0.12
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @grant       GM.getValue
@@ -46,7 +46,6 @@
                 accountCookies[userID]['userID'] = userID;
             }
         }
-        console.log(accountCookies);
         //Stop here if outside the home page due to the fact that userVars may not be available
         if (!unsafeWindow.userVars) {
             return;
@@ -63,7 +62,6 @@
             "cookie": document.cookie,
             "userID": unsafeWindow.userVars['userID']
         };
-        console.log(accountCookies);
         //Save updated cookie data
         GM.setValue("accountCookies", JSON.stringify(accountCookies));
     }
@@ -147,10 +145,12 @@
             promptYesOrNo(
                 message,
                 (event) => {
+                    console.log("clicked");
                     unsafeWindow.promptEnd();
                     resolve(true)
                 },
                 (event) => {
+                    console.log("clicked");
                     unsafeWindow.promptEnd();
                     resolve(false)
                 }
@@ -183,7 +183,7 @@
         title.style.fontFamily = "arial";
         title.style.fontSize = "13px";
         container.append(title);
-        for (let userId in accountCookies) {
+        for (let userID in accountCookies) {
             let buttonContainer = document.createElement("div");
             buttonContainer.style.display = "flex";
             buttonContainer.style.justifyContent = "space-between";
@@ -196,14 +196,14 @@
             accountButton.style.overflow = "hidden"
             accountButton.style.whiteSpace = "nowrap";
             accountButton.style.textOverflow = "ellipsis";
-            accountButton.dataset.userId = accountCookies[userId]["userID"];
-            accountButton.innerHTML = accountCookies[userId]["characterName"];
+            accountButton.dataset.userId = accountCookies[userID]["userID"];
+            accountButton.innerHTML = accountCookies[userID]["characterName"];
 
             let removeButton = document.createElement("button");
             removeButton.style.width = "30%";
             removeButton.innerHTML = "x"
 
-            if (lastActiveUserID && userId === lastActiveUserID) {
+            if (lastActiveUserID && userID === lastActiveUserID) {
                 accountButton.disabled = true;
             }
 
@@ -212,16 +212,16 @@
                 for (const element of buttons) {
                     element.disabled = true;
                 }
-                let confirmed = await promptYesOrNoAsync(`Switch current account to <span style="color: red;">${accountCookies[userId]["characterName"]}</span>?`);
+                let confirmed = await promptYesOrNoAsync(`Switch current account to <span style="color: red;">${accountCookies[userID]["characterName"]}</span>?`);
                 if (confirmed) {
-                    changeCharacter(accountCookies[userId]["cookie"]);
+                    changeCharacter(accountCookies[userID]["cookie"]);
                 }
                 let promptContainer = document.getElementById("audaxPromptContainer");
                 if (promptContainer) {
                     promptContainer.style.visibility = "hidden";
                 }
                 for (const element of buttons) {
-                    if (element.dataset.userId === userId || element.dataset.userId === undefined) {
+                    if (element.dataset.userId === userID || element.dataset.userId === undefined) {
                         element.disabled = false;
                     }
                 }
@@ -232,9 +232,9 @@
                 for (const element of buttons) {
                     element.disabled = true;
                 }
-                let confirmed = await promptYesOrNoAsync(`Remove <span style="color: red;">${accountCookies[userId]["characterName"]}</span> account?`);
+                let confirmed = await promptYesOrNoAsync(`Remove <span style="color: red;">${accountCookies[userID]["characterName"]}</span> account?`);
                 if (confirmed) {
-                    removeAccountCookie(userId);
+                    removeAccountCookie(userID);
                     document.getElementById("audaxAccountQuickSwitcher").remove();
                     addAccountQuickSwitcherButton();
                 }
