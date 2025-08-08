@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.1.4
+// @version     1.1.6
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -12,6 +12,7 @@
 // @downloadURL https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/misc-qol-tweaks.user.js
 // @updateURL   https://raw.githubusercontent.com/AudaxLudos/dead-frontier-userscripts/refs/heads/main/misc-qol-tweaks.user.js
 // @run-at      document-end
+// @require     https://cdn.jsdelivr.net/gh/AudaxLudos/dead-frontier-userscripts@7.0.3/utils.js
 // ==/UserScript==
 
 (function () {
@@ -195,11 +196,107 @@
         $("body > table:nth-child(3)").hide();
     }
 
+    function addFillInventoryButton() {
+        if (window.location.href.indexOf("index.php?page=24") > -1 || window.location.href.indexOf("index.php?page=31") > -1 || window.location.href.indexOf("index.php?page=50") > -1) {
+            return;
+        }
+        let fillInventoryButton = document.createElement("button");
+        fillInventoryButton.classList.add("opElem");
+        fillInventoryButton.style.right = "34.5px";
+        fillInventoryButton.style.bottom = "88px";
+
+        let fillInventoryImage = document.createElement("img");
+        fillInventoryImage.src = "/onlinezombiemmo/hotrods/hotrods_v9_0_11/HTML5/images/movein.png";
+        fillInventoryImage.style.height = "22px";
+
+        fillInventoryButton.appendChild(fillInventoryImage);
+        unsafeWindow.inventoryHolder.appendChild(fillInventoryButton);
+
+        fillInventoryButton.addEventListener("click", async event => {
+            try {
+                fillInventoryButton.disabled = true;
+                promptLoading();
+                await makeStorageRequest("fromstorage");
+                throw "NoErrorPrompt"
+            } catch (error) {
+                if (error !== "NoErrorPrompt") {
+                    promptWithButton(error, "Close", event => {
+                        unsafeWindow.updateAllFields();
+                        fillInventoryButton.disabled = false;
+                    });
+                }
+                unsafeWindow.updateAllFields();
+                fillInventoryButton.disabled = false;
+            }
+        });
+    }
+
+    function addStoreInventoryButton() {
+        if (window.location.href.indexOf("index.php?page=24") > -1 || window.location.href.indexOf("index.php?page=31") > -1 || window.location.href.indexOf("index.php?page=50") > -1) {
+            return;
+        }
+        let storeInventoryButton = document.createElement("button");
+        storeInventoryButton.classList.add("opElem");
+        storeInventoryButton.style.right = "12.5px";
+        storeInventoryButton.style.bottom = "88px";
+
+        let storeInventoryImage = document.createElement("img");
+        storeInventoryImage.src = "/onlinezombiemmo/hotrods/hotrods_v9_0_11/HTML5/images/moveout.png";
+        storeInventoryImage.style.height = "22px";
+
+        storeInventoryButton.appendChild(storeInventoryImage);
+        unsafeWindow.inventoryHolder.appendChild(storeInventoryButton);
+
+        storeInventoryButton.addEventListener("click", async event => {
+            try {
+                storeInventoryButton.disabled = true;
+                promptLoading();
+                await makeStorageRequest("tostorage");
+                throw "NoErrorPrompt"
+            } catch (error) {
+                if (error !== "NoErrorPrompt") {
+                    promptWithButton(error, "Close", event => {
+                        unsafeWindow.updateAllFields();
+                        storeInventoryButton.disabled = false;
+                    });
+                }
+                unsafeWindow.updateAllFields();
+                storeInventoryButton.disabled = false;
+            }
+        });
+    }
+
+
+    function makeStorageRequest(action) {
+        return new Promise((resolve, reject) => {
+            let params = {};
+            params["pagetime"] = userVars["pagetime"];
+            params["templateID"] = "0";
+            params["sc"] = userVars["sc"];
+            params["gv"] = "21";
+            params["userID"] = userVars["userID"];
+            params["password"] = userVars["password"];
+            params["action"] = action;
+            params["slotnum"] =  (0 * 40) + 1;
+            unsafeWindow.playSound("swap");
+            webCall("hotrods/inventory_actions", params, (data) => {
+                resolve(true);
+                unsafeWindow.updateIntoArr(flshToArr(data, "DFSTATS_"), userVars);
+                unsafeWindow.populateInventory();
+                unsafeWindow.populateCharacterInventory();
+                unsafeWindow.renderAvatarUpdate();
+                unsafeWindow.updateAllFieldsBase();
+            }, true);
+        })
+    }
+
     // Inject script when page fully loads
     setTimeout(() => {
         modifyUserInterface();
         if (unsafeWindow.inventoryHolder !== undefined) {
             console.log("Audax Scripts: starting misc qol tweaks userscript");
+            addFillInventoryButton();
+            addStoreInventoryButton();
             expandInventoryToSidebar();
             if (window.location.href.indexOf("index.php?page=35") > -1) {
                 registerMarketListingsObserver();
