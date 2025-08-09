@@ -18,6 +18,8 @@
 (function () {
     "use strict";
 
+    unsafeWindow.tooltipDisplaying = false;
+
     function injectWithdrawButton(marketRow) {
         let itemPrice = marketRow.dataset.price;
         if (itemPrice <= parseInt(userVars["DFSTATS_df_cash"])) {
@@ -80,26 +82,6 @@
     }
 
     function expandInventoryToSidebar() {
-        function overrideDisplayPlacementMessage(msg, x, y, type) {
-            let gameWindow = document.getElementById("gameWindow");
-            let oldInventoryHolder = unsafeWindow.inventoryHolder;
-            unsafeWindow.inventoryHolder = gameWindow;
-            unsafeWindow.vanillaDisplayPlacementMessage(msg, x, y, type);
-            unsafeWindow.inventoryHolder = oldInventoryHolder;
-        }
-
-        function overrideFakeItemDrag(e) {
-            let gameWindow = document.getElementById("gameWindow");
-            let oldInventoryHolder = unsafeWindow.inventoryHolder;
-            unsafeWindow.inventoryHolder = gameWindow;
-            unsafeWindow.drag(e);
-            unsafeWindow.inventoryHolder = oldInventoryHolder;
-        }
-
-        if (unsafeWindow.inventoryHolder == null) {
-            return;
-        }
-
         let tooltip = document.getElementById("textAddon");
         let newParent = tooltip.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
         tooltip.style.position = "absolute";
@@ -113,6 +95,9 @@
 
         unsafeWindow.vanillaDisplayPlacementMessage = unsafeWindow.displayPlacementMessage;
         unsafeWindow.displayPlacementMessage = overrideDisplayPlacementMessage;
+
+        unsafeWindow.vanillaCleanPlacementMessage = unsafeWindow.cleanPlacementMessage;
+        unsafeWindow.cleanPlacementMessage = overrideCleanPlacementMessage;
 
         unsafeWindow.inventoryHolder.removeEventListener("mousemove", unsafeWindow.drag);
         newParent.addEventListener("mousemove", overrideFakeItemDrag);
@@ -136,6 +121,35 @@
         interactionWindow.className = "fakeSlot";
         document.getElementById("sidebar").appendChild(interactionWindow);
     }
+
+    function overrideFakeItemDrag(e) {
+            let gameWindow = document.getElementById("gameWindow");
+            let oldInventoryHolder = unsafeWindow.inventoryHolder;
+            unsafeWindow.inventoryHolder = gameWindow;
+            unsafeWindow.drag(e);
+            unsafeWindow.inventoryHolder = oldInventoryHolder;
+        }
+
+        function overrideDisplayPlacementMessage(msg, x, y, type) {
+            let gameWindow = document.getElementById("gameWindow");
+            let oldInventoryHolder = unsafeWindow.inventoryHolder;
+            unsafeWindow.inventoryHolder = gameWindow;
+            unsafeWindow.vanillaDisplayPlacementMessage(msg, x, y, type);
+            unsafeWindow.inventoryHolder = oldInventoryHolder;
+        }
+
+        function overrideCleanPlacementMessage() {
+            if (!unsafeWindow.tooltipDisplaying) {
+                unsafeWindow.vanillaCleanPlacementMessage();
+            }
+        }
+
+        function cleanTooltipIfNeeded() {
+            if (unsafeWindow.tooltipDisplaying) {
+                unsafeWindow.tooltipDisplaying = false;
+                unsafeWindow.cleanPlacementMessage();
+            }
+        }
 
     function registerQuickItemSearchListener() {
         inventoryHolder.addEventListener("dblclick", (event) => {
@@ -197,7 +211,7 @@
     }
 
     function addFillInventoryButton() {
-        if (window.location.href.indexOf("index.php?page=24") > -1 || window.location.href.indexOf("index.php?page=31") > -1 || window.location.href.indexOf("index.php?page=50") > -1) {
+        if (window.location.href.indexOf("index.php?page=31") > -1 || window.location.href.indexOf("index.php?page=50") > -1) {
             return;
         }
         let fillInventoryButton = document.createElement("button");
@@ -208,9 +222,7 @@
         let fillInventoryImage = document.createElement("img");
         fillInventoryImage.src = "/onlinezombiemmo/hotrods/hotrods_v9_0_11/HTML5/images/movein.png";
         fillInventoryImage.style.height = "22px";
-
         fillInventoryButton.appendChild(fillInventoryImage);
-        unsafeWindow.inventoryHolder.appendChild(fillInventoryButton);
 
         fillInventoryButton.addEventListener("click", async event => {
             try {
@@ -229,10 +241,19 @@
                 fillInventoryButton.disabled = false;
             }
         });
+        fillInventoryButton.addEventListener("mousemove", event => {
+            unsafeWindow.tooltipDisplaying = true;
+            unsafeWindow.displayPlacementMessage('Transfer items from storage to inventory', fillInventoryButton.getBoundingClientRect().left, fillInventoryButton.getBoundingClientRect().bottom, 'ACTION');
+        });
+        fillInventoryButton.addEventListener("mouseleave", event => {
+            cleanTooltipIfNeeded();
+        });
+
+        unsafeWindow.inventoryHolder.appendChild(fillInventoryButton);
     }
 
     function addStoreInventoryButton() {
-        if (window.location.href.indexOf("index.php?page=24") > -1 || window.location.href.indexOf("index.php?page=31") > -1 || window.location.href.indexOf("index.php?page=50") > -1) {
+        if (window.location.href.indexOf("index.php?page=31") > -1 || window.location.href.indexOf("index.php?page=50") > -1) {
             return;
         }
         let storeInventoryButton = document.createElement("button");
@@ -243,9 +264,7 @@
         let storeInventoryImage = document.createElement("img");
         storeInventoryImage.src = "/onlinezombiemmo/hotrods/hotrods_v9_0_11/HTML5/images/moveout.png";
         storeInventoryImage.style.height = "22px";
-
         storeInventoryButton.appendChild(storeInventoryImage);
-        unsafeWindow.inventoryHolder.appendChild(storeInventoryButton);
 
         storeInventoryButton.addEventListener("click", async event => {
             try {
@@ -264,6 +283,15 @@
                 storeInventoryButton.disabled = false;
             }
         });
+        storeInventoryButton.addEventListener('mousemove', function (evt) {
+            unsafeWindow.tooltipDisplaying = true;
+            unsafeWindow.displayPlacementMessage('Transfer items from inventory to storage', storeInventoryButton.getBoundingClientRect().left, storeInventoryButton.getBoundingClientRect().bottom, 'ACTION');
+        });
+        storeInventoryButton.addEventListener('mouseleave', function (evt) {
+            cleanTooltipIfNeeded();
+        });
+
+        unsafeWindow.inventoryHolder.appendChild(storeInventoryButton);
     }
 
 
@@ -277,7 +305,7 @@
             params["userID"] = userVars["userID"];
             params["password"] = userVars["password"];
             params["action"] = action;
-            params["slotnum"] =  (0 * 40) + 1;
+            params["slotnum"] = (0 * 40) + 1;
             unsafeWindow.playSound("swap");
             webCall("hotrods/inventory_actions", params, (data) => {
                 resolve(true);
@@ -295,9 +323,9 @@
         modifyUserInterface();
         if (unsafeWindow.inventoryHolder !== undefined) {
             console.log("Audax Scripts: starting misc qol tweaks userscript");
+            expandInventoryToSidebar();
             addFillInventoryButton();
             addStoreInventoryButton();
-            expandInventoryToSidebar();
             if (window.location.href.indexOf("index.php?page=35") > -1) {
                 registerMarketListingsObserver();
                 registerQuickItemSearchListener();
