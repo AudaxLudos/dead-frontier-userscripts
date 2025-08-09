@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.1.9
+// @version     1.2.0
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -123,33 +123,33 @@
     }
 
     function overrideFakeItemDrag(e) {
-            let gameWindow = document.getElementById("gameWindow");
-            let oldInventoryHolder = unsafeWindow.inventoryHolder;
-            unsafeWindow.inventoryHolder = gameWindow;
-            unsafeWindow.drag(e);
-            unsafeWindow.inventoryHolder = oldInventoryHolder;
-        }
+        let gameWindow = document.getElementById("gameWindow");
+        let oldInventoryHolder = unsafeWindow.inventoryHolder;
+        unsafeWindow.inventoryHolder = gameWindow;
+        unsafeWindow.drag(e);
+        unsafeWindow.inventoryHolder = oldInventoryHolder;
+    }
 
-        function overrideDisplayPlacementMessage(msg, x, y, type) {
-            let gameWindow = document.getElementById("gameWindow");
-            let oldInventoryHolder = unsafeWindow.inventoryHolder;
-            unsafeWindow.inventoryHolder = gameWindow;
-            unsafeWindow.vanillaDisplayPlacementMessage(msg, x, y, type);
-            unsafeWindow.inventoryHolder = oldInventoryHolder;
-        }
+    function overrideDisplayPlacementMessage(msg, x, y, type) {
+        let gameWindow = document.getElementById("gameWindow");
+        let oldInventoryHolder = unsafeWindow.inventoryHolder;
+        unsafeWindow.inventoryHolder = gameWindow;
+        unsafeWindow.vanillaDisplayPlacementMessage(msg, x, y, type);
+        unsafeWindow.inventoryHolder = oldInventoryHolder;
+    }
 
-        function overrideCleanPlacementMessage() {
-            if (!unsafeWindow.tooltipDisplaying) {
-                unsafeWindow.vanillaCleanPlacementMessage();
-            }
+    function overrideCleanPlacementMessage() {
+        if (!unsafeWindow.tooltipDisplaying) {
+            unsafeWindow.vanillaCleanPlacementMessage();
         }
+    }
 
-        function cleanTooltipIfNeeded() {
-            if (unsafeWindow.tooltipDisplaying) {
-                unsafeWindow.tooltipDisplaying = false;
-                unsafeWindow.cleanPlacementMessage();
-            }
+    function cleanTooltipIfNeeded() {
+        if (unsafeWindow.tooltipDisplaying) {
+            unsafeWindow.tooltipDisplaying = false;
+            unsafeWindow.cleanPlacementMessage();
         }
+    }
 
     function registerQuickItemSearchListener() {
         inventoryHolder.addEventListener("dblclick", (event) => {
@@ -294,7 +294,6 @@
         unsafeWindow.inventoryHolder.appendChild(storeInventoryButton);
     }
 
-
     function makeStorageRequest(action) {
         return new Promise((resolve, reject) => {
             let params = {};
@@ -318,14 +317,175 @@
         })
     }
 
+    function addBackpackMenu() {
+        if (window.location.href.indexOf("index.php?page=50") <= -1 && window.location.href.indexOf("index.php?page=35") <= -1 && window.location.href.indexOf("index.php?page=59") <= -1) {
+            return;
+        }
+        createBackpackMenuItems();
+        let backpackMenu = document.getElementById('backpackMenu');
+
+        let openBackpackMenuBtn = document.createElement('button');
+        openBackpackMenuBtn.textContent = 'Backpack';
+        openBackpackMenuBtn.style = 'padding: 3px 5px !important;';
+        openBackpackMenuBtn.dataset.pmoverride = '';
+        openBackpackMenuBtn.addEventListener('click', function (e) {
+            if (typeof backpackMenu.dataset.opened === 'undefined') {
+                backpackMenu.style.top = '50px';
+                backpackMenu.dataset.opened = 'open';
+            } else {
+                backpackMenu.style.top = (openBackpackMenuBtn.offsetHeight - backpackMenu.offsetHeight - 1) + 'px';
+                delete backpackMenu.dataset.opened;
+            }
+        });
+        openBackpackMenuBtn.addEventListener('mousemove', function () {
+            if (typeof backpackMenu.dataset.opened !== 'undefined') {
+                unsafeWindow.displayPlacementMessage('You can move an item over button to close menu', backpackMenu.getBoundingClientRect().left, backpackMenu.getBoundingClientRect().bottom + 12, 'INFO');
+            } else {
+                unsafeWindow.displayPlacementMessage('You can move an item over button to open menu', backpackMenu.getBoundingClientRect().left, backpackMenu.getBoundingClientRect().bottom + 12, 'INFO');
+            }
+        });
+        backpackMenu.appendChild(openBackpackMenuBtn);
+
+        let inOpenMenu = false;
+        inventoryHolder.addEventListener('mousemove', function () {
+            if (inOpenMenu) {
+                return;
+            }
+            let insideOfBPBoundingBox = false;
+            let backpackMenuBB = openBackpackMenuBtn.getBoundingClientRect();
+            if (mousePos[0] > backpackMenuBB.left && mousePos[0] < backpackMenuBB.right && mousePos[1] > backpackMenuBB.top && mousePos[1] < backpackMenuBB.bottom) {
+                insideOfBPBoundingBox = true;
+            }
+            if (active && insideOfBPBoundingBox) {
+                inOpenMenu = true;
+                setTimeout(() => {
+                    if (active && mousePos[0] > backpackMenuBB.left && mousePos[0] < backpackMenuBB.right && mousePos[1] > backpackMenuBB.top && mousePos[1] < backpackMenuBB.bottom) {
+                        if (typeof backpackMenu.dataset.opened === 'undefined') {
+                            backpackMenu.style.top = '50px';
+                            backpackMenu.dataset.opened = 'open';
+                        } else {
+                            backpackMenu.style.top = (openBackpackMenuBtn.offsetHeight - backpackMenu.offsetHeight - 1) + 'px';
+                            delete backpackMenu.dataset.opened;
+                        }
+                    }
+                    setTimeout(() => {
+                        inOpenMenu = false;
+                    }, 50);
+                }, 500);
+            }
+        });
+
+        backpackMenu.style.border = '1px solid #990000';
+        backpackMenu.style.backgroundColor = 'rgba(0,0,0,0.8)';
+        backpackMenu.style.top = (openBackpackMenuBtn.offsetHeight - backpackMenu.offsetHeight - 1) + 'px';
+
+        setTimeout(() => {
+            backpackMenu.style.transition = 'top 0.2s ease-in-out';
+        }, 10);
+    }
+
+    function createBackpackMenuItems() {
+        let backpackMenu = document.createElement('div');
+        backpackMenu.id = 'backpackMenu';
+        backpackMenu.style = 'position: absolute; right: 28px; top: 50px; max-width: 132px; z-index: 1;';
+
+        var backpackLabel = document.createElement("div");
+        backpackLabel.id = "backpackLabel";
+        backpackMenu.appendChild(backpackLabel);
+
+        var backpackWindow = document.createElement("table");
+        backpackWindow.id = "backpackdisplay";
+        backpackMenu.appendChild(backpackWindow);
+
+        var backpackWithdraw = document.createElement('button');
+        backpackWithdraw.id = 'backpackWithdraw';
+        backpackWithdraw.textContent = 'Move All to Inventory';
+        backpackWithdraw.dataset.pmoverride = '';
+        backpackWithdraw.style.display = 'none';
+        backpackWithdraw.disabled = true;
+        backpackWithdraw.addEventListener('click', function (evt) {
+            let iBackpack = new InventoryItem(userVars['DFSTATS_df_backpack']);
+            let totalCurrentBackpackSlots = parseInt(globalData[iBackpack.type]['slots']);
+            if (typeof iBackpack.stats !== 'undefined') {
+                totalCurrentBackpackSlots += parseInt(iBackpack.stats);
+            }
+            let totalItemsInPack = 0;
+            for (var i = 1; i <= totalCurrentBackpackSlots; i++) {
+                if (typeof userVars["DFSTATS_df_backpack" + i + "_type"] !== "undefined" && userVars["DFSTATS_df_backpack" + i + "_type"].length > 0) {
+                    totalItemsInPack++;
+                }
+            }
+
+            let freeInventorySlots = 0;
+            for (let i = 1; i <= userVars['DFSTATS_df_invslots']; i++) {
+                if (typeof userVars['DFSTATS_df_inv' + i + '_type'] === 'undefined' || userVars['DFSTATS_df_inv' + i + '_type'].length === 0) {
+                    freeInventorySlots++;
+                }
+            }
+
+            if (freeInventorySlots >= totalItemsInPack) {
+                var dataArr = {};
+                dataArr["pagetime"] = userVars["pagetime"];
+                dataArr["templateID"] = userVars["template_ID"];
+                dataArr["sc"] = userVars["sc"];
+                dataArr["creditsnum"] = userVars["DFSTATS_df_credits"];
+                dataArr["buynum"] = "0";
+                dataArr["renameto"] = "undefined`undefined";
+                dataArr["expected_itemprice"] = "-1";
+                dataArr["expected_itemtype2"] = '';
+                dataArr["expected_itemtype"] = '';
+                dataArr["itemnum2"] = '';
+                dataArr["itemnum"] = '';
+                dataArr["price"] = getUpgradePrice();
+                dataArr["gv"] = 21;
+                dataArr["userID"] = userVars["userID"];
+                dataArr["password"] = userVars["password"];
+                unsafeWindow.playSound("swap");
+                dataArr["action"] = "empty";
+                webCall("hotrods/backpack", dataArr, function (data) {
+                    unsafeWindow.updateIntoArr(flshToArr(data, "DFSTATS_"), userVars);
+                    unsafeWindow.populateInventory();
+                    unsafeWindow.populateBackpack();
+                    unsafeWindow.updateAllFields();
+                }, true);
+            }
+        });
+        backpackWithdraw.addEventListener('mousemove', function (evt) {
+            if (backpackWithdraw.disabled) {
+                switch (backpackWithdraw.dataset.pmoverride) {
+                    case 'lock':
+                        unsafeWindow.displayPlacementMessage('No movable items', backpackWithdraw.getBoundingClientRect().left, backpackWithdraw.getBoundingClientRect().bottom + 12, 'ERROR');
+                        break;
+                    default:
+                        unsafeWindow.displayPlacementMessage('Too many items', backpackWithdraw.getBoundingClientRect().left, backpackWithdraw.getBoundingClientRect().bottom + 12, 'ERROR');
+                        break;
+                }
+            }
+        });
+        if (typeof userVars['DFSTATS_df_backpack'] === 'undefined' || userVars['DFSTATS_df_backpack'].length === 0) {
+            backpackMenu.style.display = 'none';
+        }
+        backpackMenu.appendChild(backpackWithdraw);
+
+        document.getElementById('invController').appendChild(backpackMenu);
+
+        // Sets up inventory ui
+        unsafeWindow.populateBackpack();
+        // Populates inventory ui
+        unsafeWindow.reloadInventoryData(() => {
+            unsafeWindow.populateBackpack();
+        })
+    }
+
     // Inject script when page fully loads
-    setTimeout(() => {
+    setTimeout(async () => {
         modifyUserInterface();
         if (unsafeWindow.inventoryHolder !== undefined) {
             console.log("Audax Scripts: starting misc qol tweaks userscript");
             expandInventoryToSidebar();
             addFillInventoryButton();
             addStoreInventoryButton();
+            addBackpackMenu();
             if (window.location.href.indexOf("index.php?page=35") > -1) {
                 registerMarketListingsObserver();
                 registerQuickItemSearchListener();
