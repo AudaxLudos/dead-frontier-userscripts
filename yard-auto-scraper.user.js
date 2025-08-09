@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.7
+// @version     1.0.8
 // @description Adds buttons to quickly fill hunger, repair armour and heal health
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -51,11 +51,10 @@
             return;
         }
         let scrapAllButton = document.createElement("button");
-        scrapAllButton.id = "customScrapAllButton";
         scrapAllButton.innerHTML = "Scrap Inventory";
         scrapAllButton.classList.add("opElem");
-        scrapAllButton.style.top = "418px";
-        scrapAllButton.style.left = "410px";
+        scrapAllButton.style.bottom = "86px";
+        scrapAllButton.style.right = "150px";
         unsafeWindow.inventoryHolder.appendChild(scrapAllButton);
 
         scrapAllButton.addEventListener("click", async event => {

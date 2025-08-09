@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.1.6
+// @version     1.1.9
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -202,7 +202,7 @@
         }
         let fillInventoryButton = document.createElement("button");
         fillInventoryButton.classList.add("opElem");
-        fillInventoryButton.style.right = "34.5px";
+        fillInventoryButton.style.left = "280px";
         fillInventoryButton.style.bottom = "88px";
 
         let fillInventoryImage = document.createElement("img");
@@ -237,7 +237,7 @@
         }
         let storeInventoryButton = document.createElement("button");
         storeInventoryButton.classList.add("opElem");
-        storeInventoryButton.style.right = "12.5px";
+        storeInventoryButton.style.right = "280px";
         storeInventoryButton.style.bottom = "88px";
 
         let storeInventoryImage = document.createElement("img");
