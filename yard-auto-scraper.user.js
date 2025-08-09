@@ -87,14 +87,15 @@
                 unsafeWindow.updateAllFields();
                 scrapAllButton.disabled = false;
             } catch (error) {
-                if (error !== "NoErrorPrompt") {
-                    promptWithButton(error, "Close", event => {
-                        unsafeWindow.updateAllFields();
-                        scrapAllButton.disabled = false;
-                    });
+                if (error === "NoErrorPrompt") {
+                    unsafeWindow.updateAllFields();
+                    scrapAllButton.disabled = false;
+                    return;
                 }
-                unsafeWindow.updateAllFields();
-                scrapAllButton.disabled = false;
+                promptWithButton(error, "Close", event => {
+                    unsafeWindow.updateAllFields();
+                    scrapAllButton.disabled = false;
+                });
             }
         });
     }
@@ -144,7 +145,6 @@
         if (window.location.href.indexOf("index.php?page=24") > -1 && unsafeWindow.inventoryHolder != null) {
             console.log("Audax Scripts: starting yard auto scraper userscript");
             addAutoScrapInventoryButton();
-            addStorageToInventoryButton()
         }
     }, 500);
 })();
