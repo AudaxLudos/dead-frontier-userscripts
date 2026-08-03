@@ -197,15 +197,19 @@ function promptWithButton(message, buttonName, buttonCallback) {
 
     prompt.style.display = "block";
     gameContent.classList.remove("warning");
-    gameContent.innerHTML = `<div style="text-align: center;">${message}</div>`;
 
+    // content
+    let content = document.createElement("div");
+    content.style.textAlign = "center";
+    content.innerHTML = message
+    gameContent.append(content);
+
+    // content buttons
+    let buttons = document.createElement("div");
+    buttons.classList.add("optionHolder")
     let button = document.createElement("button");
     button.textContent = buttonName;
-    button.style.position = "absolute";
-    button.style.left = "111px";
-    button.style.bottom = "8px";
     button.addEventListener("click", buttonCallback);
-
     gameContent.append(button);
 }
 
@@ -217,26 +221,22 @@ function promptYesOrNo(message, yesCallback, noCallback) {
     gameContent.classList.add("warning");
     gameContent.innerHTML = message;
 
+    // content
     let content = document.createElement("div");
     content.innerHTML = message
 
     gameContent.appendChild(content)
 
+    // content buttons
     let buttons = document.createElement("div");
     buttons.classList.add("optionHolder")
 
     let yesButton = document.createElement("button");
-    yesButton.style.position = "absolute";
-    yesButton.style.left = "86px";
-    yesButton.style.bottom = "8px";
     yesButton.innerHTML = "Yes";
     yesButton.addEventListener("click", yesCallback);
     buttons.appendChild(yesButton);
 
     let noButton = document.createElement("button");
-    noButton.style.position = "absolute";
-    noButton.style.right = "86px";
-    noButton.style.bottom = "8px";
     noButton.innerHTML = "No";
     noButton.addEventListener("click", noCallback);
     buttons.appendChild(noButton);
