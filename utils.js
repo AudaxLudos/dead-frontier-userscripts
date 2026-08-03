@@ -219,7 +219,6 @@ function promptYesOrNo(message, yesCallback, noCallback) {
 
     prompt.style.display = "block";
     gameContent.classList.add("warning");
-    gameContent.innerHTML = message;
 
     // content
     let content = document.createElement("div");
