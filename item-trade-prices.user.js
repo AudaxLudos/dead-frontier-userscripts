@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.0.14
+// @version     1.0.15
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -68,17 +68,15 @@
     }
 
     function registerInfoBoxObserver() {
-        let target = unsafeWindow.infoBox;
+        let target = unsafeWindow.inventoryHolder;
         let config = { childList: true, subtree: true };
 
         let infoBoxObserver = new MutationObserver((mutationList) => {
             for (let mutation of mutationList) {
                 if (mutation.type === 'childList') {
-                    let isVanillaMutation = Object.values(mutation.addedNodes).some(node => node.className === "itemName");
-                    let scrapPriceDivIndex = Object.values(mutation.addedNodes).findIndex(node => node.className === "itemData" && node.textContent.includes("Scrap Price"));
-                    let scrapPriceDiv = Object.values(mutation.addedNodes).at(scrapPriceDivIndex);
-                    if (isVanillaMutation && hoveredItem) {
-                        injectItemTradePrices(hoveredItem, scrapPriceDiv);
+                    let isInfoBox = Object.values(mutation.addedNodes).some(node => node.id === "infoBox");
+                    if (isInfoBox) {
+                        injectItemTradePrices(hoveredItem);
                         break;
                     }
                 }
@@ -88,14 +86,14 @@
         infoBoxObserver.observe(target, config);
     }
 
-    function injectItemTradePrices(itemId, appendTo) {
+    function injectItemTradePrices(itemId) {
         let itemData = globalData[itemId];
         if (itemData && itemData["no_transfer"]) {
             return;
         }
         // Only make a new request if 30 seconds has passed
         if (itemId in itemsTradeData && Date.now() < itemsTradeData[itemId]["timestamp"] + 30000) {
-            displayTradePrices(hoveredItem, appendTo);
+            displayTradePrices(hoveredItem);
             return;
         }
         if (pendingItemRequests.includes(itemId)) {
@@ -122,11 +120,11 @@
             itemsTradeData[itemId]["trades"] = itemTrades;
             pendingItemRequests = pendingItemRequests.filter(item => item !== itemId);
             localStorage.setItem("audax_itemsTradeData", JSON.stringify(itemsTradeData));
-            displayTradePrices(hoveredItem, appendTo);
+            displayTradePrices(hoveredItem);
         });
     }
 
-    function displayTradePrices(itemId, appendTo) {
+    function displayTradePrices(itemId) {
         if (!itemsTradeData[itemId]) {
             return;
         }
@@ -154,12 +152,8 @@
         } else {
             tradePrices.innerHTML += " Non found";
         }
-        document.getElementById("infoBox").style.pointerEvents = "none";
-        if (appendTo && appendTo.parentNode) {
-            appendTo.parentNode.insertBefore(tradePrices, appendTo.nextSibling);
-        } else {
-            document.getElementById("infoBox").appendChild(tradePrices);
-        }
+        let scrapPriceDiv = $(unsafeWindow.infoBox).find("div.itemData:contains('Scrap Price')");
+        $(tradePrices).appendTo(scrapPriceDiv)
     }
 
     // Inject script when page fully loads
