@@ -197,6 +197,7 @@ function promptWithButton(message, buttonName, buttonCallback) {
 
     prompt.style.display = "block";
     gameContent.classList.remove("warning");
+    gameContent.innerHTML = ""
 
     // content
     let content = document.createElement("div");
@@ -219,6 +220,7 @@ function promptYesOrNo(message, yesCallback, noCallback) {
 
     prompt.style.display = "block";
     gameContent.classList.add("warning");
+    gameContent.innerHTML = ""
 
     // content
     let content = document.createElement("div");
