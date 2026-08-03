@@ -4,7 +4,7 @@
 // @namespace   https://github.com/AudaxLudos/
 // @author      AudaxLudos
 // @license     MIT
-// @version     1.2.0
+// @version     1.2.1
 // @description Adds trade prices to item tooltip on hover
 // @match       https://fairview.deadfrontier.com/onlinezombiemmo/*
 // @homepageURL https://github.com/AudaxLudos/dead-frontier-userscripts
@@ -179,7 +179,7 @@
             return;
         }
         // Runs only when in inner city page
-        if (window.location.href.indexOf("index.php?page=21") > -1) {
+        if (unsafeWindow.location.href.indexOf("index.php?page=21") > -1) {
             // Hide flash/unity web player custom browser link
             $("body > table:nth-child(1)").hide();
             // Modify back to outpost button
@@ -198,6 +198,7 @@
         // Fit everything to current window
         if ($("td[background*='https://files.deadfrontier.com/deadfrontier/DF3Dimages/mainpage/header.jpg']") != null) {
             $("td[background*='https://files.deadfrontier.com/deadfrontier/DF3Dimages/mainpage/header.jpg']").css("background-position", "0px -160px");
+          $("td[background*='https://files.deadfrontier.com/deadfrontier/DF3Dimages/mainpage/header.jpg']").css("background-size", "");
             $("td[background*='https://files.deadfrontier.com/deadfrontier/DF3Dimages/mainpage/header.jpg']").parent().height(68);
             $("td[style*='https://files.deadfrontier.com/deadfrontier/DF3Dimages/mainpage/right_margin.jpg']").css("background-position", "left -160px");
             $("td[style*='https://files.deadfrontier.com/deadfrontier/DF3Dimages/mainpage/left_margin.jpg']").css("background-position", "right -160px");
@@ -253,7 +254,7 @@
     }
 
     function addStoreInventoryButton() {
-        if (window.location.href.indexOf("index.php?page=31") > -1 || window.location.href.indexOf("index.php?page=50") > -1) {
+        if (unsafeWindow.location.href.indexOf("index.php?page=31") > -1 || unsafeWindow.location.href.indexOf("index.php?page=50") > -1) {
             return;
         }
         let storeInventoryButton = document.createElement("button");
@@ -318,7 +319,7 @@
     }
 
     function addBackpackMenu() {
-        if (window.location.href.indexOf("index.php?page=50") <= -1 && window.location.href.indexOf("index.php?page=35") <= -1 && window.location.href.indexOf("index.php?page=59") <= -1) {
+        if (unsafeWindow.location.href.indexOf("index.php?page=50") <= -1 && unsafeWindow.location.href.indexOf("index.php?page=35") <= -1 && unsafeWindow.location.href.indexOf("index.php?page=59") <= -1) {
             return;
         }
         createBackpackMenuItems();
