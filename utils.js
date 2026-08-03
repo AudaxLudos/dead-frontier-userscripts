@@ -217,13 +217,21 @@ function promptYesOrNo(message, yesCallback, noCallback) {
     gameContent.classList.add("warning");
     gameContent.innerHTML = message;
 
+    let content = document.createElement("div");
+    content.innerHTML = message
+
+    gameContent.appendChild(content)
+
+    let buttons = document.createElement("div");
+    buttons.classList.add("optionHolder")
+
     let yesButton = document.createElement("button");
     yesButton.style.position = "absolute";
     yesButton.style.left = "86px";
     yesButton.style.bottom = "8px";
     yesButton.innerHTML = "Yes";
     yesButton.addEventListener("click", yesCallback);
-    gameContent.appendChild(yesButton);
+    buttons.appendChild(yesButton);
 
     let noButton = document.createElement("button");
     noButton.style.position = "absolute";
@@ -231,7 +239,9 @@ function promptYesOrNo(message, yesCallback, noCallback) {
     noButton.style.bottom = "8px";
     noButton.innerHTML = "No";
     noButton.addEventListener("click", noCallback);
-    gameContent.appendChild(noButton);
+    buttons.appendChild(noButton);
+
+    gameContent.appendChild(buttons)
 }
 
 function promptYesOrNoAsync(message) {
